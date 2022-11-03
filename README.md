@@ -1,0 +1,1 @@
+# Journal-Search-Platform-JSP
