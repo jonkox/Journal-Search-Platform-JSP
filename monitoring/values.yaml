@@ -1,0 +1,82 @@
+enableGrafana : true
+enablePrometheus : true
+
+kube-prometheus:
+  fullnameOverride: "main"
+
+  prometheus:
+    resources:
+      limits: 
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+  operator:
+    resources:
+      limits: 
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+  alertmanager:
+    resources:
+      limits: 
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+  blackboxExporter:
+    resources:
+      limits: 
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+  
+  node-exporter:
+    resources:
+      limits: 
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+        
+  kube-state-metrics:
+    resources:
+      limits: 
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+grafana:
+  datasources:
+    secretDefinition:
+      apiVersion: 1
+      datasources:
+      - name: Prometheus
+        type: prometheus
+        url: http://main-prometheus:9090/
+        access: proxy
+        isDefault: true
+  admin:
+    password: "11111111"
+  
+  grafana:
+    replicaCount: 1
+    resources:
+      limits: 
+        cpu: 750m
+        memory: 768Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
