@@ -25,7 +25,7 @@ def loaderFinishedProcess():
     f = open(localFile,  "r")
     dataFromFile = f.read()
 
-    # Simulation: Send message from "REGEX-PROCESSOR" to ES PUBLISHER APP
+    # Simulation: Send message from "loader" to downloader app
     channel.basic_publish(exchange='', routing_key=QUEUE_NAME_INPUT, body=dataFromFile)
 
     print(f"{bcolors.OK} Simulation: Got msg from queue, start process {bcolors.RESET}")
