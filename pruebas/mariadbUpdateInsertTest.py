@@ -84,4 +84,4 @@ def insertTable(grp_number):
    
 
 #updateGrpTable('1')
-insertTable('1')
+insertTable('0')
