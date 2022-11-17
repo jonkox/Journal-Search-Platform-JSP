@@ -1,0 +1,348 @@
+{
+    "id_job": "1",
+    "grp_number": "3",
+    "docs": [
+        {
+            "rel_doi": "10.1101/2022.11.12.22282248",
+            "rel_title": "COVID-19 IN BRAZIL: A CROSS-SECTIONAL IMMUNO-EPIDEMICAL AND GENOMIC EVALUATION IN A PRE-OMICRON ERA",
+            "rel_date": "2022-11-15",
+            "rel_site": "medRxiv",
+            "rel_link": "https://medrxiv.org/cgi/content/short/2022.11.12.22282248",
+            "rel_abs": "The seventh human coronavirus, was discovered and reported primarily in Wuhan, China. After intense seasons with repercussions in all areas ofhumanity, the pandemic demonstrates a new perspective. In Brazil, the pandemic concept has had impacts in vast areas, including mainly hospitals. This present study aims to describe, present and synthesize data that correlate the symptoms of passive and/or active patients for Covid-19 and their respective results of igg/igm serological tests in hospitals in cruzeiro, Sao Paulo. The form had been applied to 333 people and obtained conclusive results and several symptoms presented, in addition, asymptomatic cases were also analyzed and directed in the genomic study of variants of concern, as well as vaccination data in the study region.",
+            "rel_num_authors": 4,
+            "rel_authors": [
+                {
+                    "author_name": "Sarah de Oliveira Rodrigues",
+                    "author_inst": "Pontifical Catholic University"
+                },
+                {
+                    "author_name": "Gabriel Ferrari de Oliveira",
+                    "author_inst": "Pontifical Catholic University"
+                },
+                {
+                    "author_name": "Marcella Costa e Silva",
+                    "author_inst": "Pontifical Catholic University"
+                },
+                {
+                    "author_name": "Jorge Pamplona Pagnossa",
+                    "author_inst": "Pontifical Catholic University"
+                }
+            ],
+            "version": "1",
+            "license": "cc_no",
+            "type": "PUBLISHAHEADOFPRINT",
+            "category": "epidemiology",
+            "details": {
+                "jatsxml": "https://www.medrxiv.org/content/early/2022/11/15/2022.11.12.22282248.source.xml"
+            }
+        },
+        {
+            "rel_doi": "10.1101/2022.11.09.22282113",
+            "rel_title": "Risk of SARS-CoV-2 reinfection is time- and variant-dependant, France, January 2021 to August 2022",
+            "rel_date": "2022-11-15",
+            "rel_site": "medRxiv",
+            "rel_link": "https://medrxiv.org/cgi/content/short/2022.11.09.22282113",
+            "rel_abs": "Since the emergence of Omicron, reinfections with SARS-CoV-2 have been rising. We estimated the risk of SARS-CoV-2 reinfection in the widely vaccinated French population, from January to August 2022. At nine weeks post-infection, the relative risk of reinfection, primary infection with pre-Delta variants being the reference group, was estimated at 0.43 [95%CI 0.40-0.47] if the primary infection was attributed to Delta, 0.21% [95%CI 0.19-0.24] with BA.1 and 0.17% [95% CI 0.15-0.18] with BA.2, and rapidly waned overtime. After a BA.1 primary infection the protection was similar against BA.2 or BA.4/5 reinfection.",
+            "rel_num_authors": 7,
+            "rel_authors": [
+                {
+                    "author_name": "Vincent Auvigne",
+                    "author_inst": "Sante Publique France"
+                },
+                {
+                    "author_name": "Justine Schaeffer",
+                    "author_inst": "Sante publique France"
+                },
+                {
+                    "author_name": "Thibault Boudon",
+                    "author_inst": "Sante publique France"
+                },
+                {
+                    "author_name": "Cynthia Tamandjou",
+                    "author_inst": "Sante publique France"
+                },
+                {
+                    "author_name": "Julie Figoni",
+                    "author_inst": "Sante publique France"
+                },
+                {
+                    "author_name": "Isabelle Parent du Chatelet",
+                    "author_inst": "Sante publique France"
+                },
+                {
+                    "author_name": "Sibylle Bernard-Stoecklin",
+                    "author_inst": "Sante publique France"
+                }
+            ],
+            "version": "1",
+            "license": "cc_by",
+            "type": "PUBLISHAHEADOFPRINT",
+            "category": "epidemiology",
+            "details": {
+                "jatsxml": "https://www.medrxiv.org/content/early/2022/11/15/2022.11.09.22282113.source.xml"
+            }
+        },
+        {
+            "rel_doi": "10.1101/2022.11.14.22282103",
+            "rel_title": "Long-term COVID-19 booster effectiveness by infection history and clinical vulnerability and immune imprinting",
+            "rel_date": "2022-11-15",
+            "rel_site": "medRxiv",
+            "rel_link": "https://medrxiv.org/cgi/content/short/2022.11.14.22282103",
+            "rel_abs": "Background: Long-term effectiveness of COVID-19 mRNA boosters in populations with different prior infection histories and clinical vulnerability profiles is inadequately understood. Methods: A national, matched, retrospective, target trial cohort study was conducted in Qatar to investigate effectiveness of a third mRNA (booster) dose, relative to a primary series of two doses, against SARS-CoV-2 omicron infection and against severe COVID-19. Associations were estimated using Cox proportional-hazards regression models. Results: Booster effectiveness relative to primary series was 41.1% (95% CI: 40.0-42.1%) against infection and 80.5% (95% CI: 55.7-91.4%) against severe, critical, or fatal COVID-19, over one-year follow-up after the booster. Among persons clinically vulnerable to severe COVID-19, effectiveness was 49.7% (95% CI: 47.8-51.6%) against infection and 84.2% (95% CI: 58.8-93.9%) against severe, critical, or fatal COVID-19. Effectiveness against infection was highest at 57.1% (95% CI: 55.9-58.3%) in the first month after the booster but waned thereafter and was modest at only 14.4% (95% CI: 7.3-20.9%) by the sixth month. In the seventh month and thereafter, coincident with BA.4/BA.5 and BA.2.75* subvariant incidence, effectiveness was progressively negative reaching -20.3% (95% CI: -55.0-29.0%) after one year of follow-up. Similar levels and patterns of protection were observed irrespective of prior infection status, clinical vulnerability, or type of vaccine (BNT162b2 versus mRNA-1273). Conclusions: Boosters reduced infection and severe COVID-19, particularly among those clinically vulnerable to severe COVID-19. However, protection against infection waned after the booster, and eventually suggested an imprinting effect of compromised protection relative to the primary series. However, imprinting effects are unlikely to negate the overall public health value of booster vaccinations.",
+            "rel_num_authors": 24,
+            "rel_authors": [
+                {
+                    "author_name": "Hiam Chemaitelly",
+                    "author_inst": "Weill Cornell Medicine-Qatar"
+                },
+                {
+                    "author_name": "Houssein Ayoub",
+                    "author_inst": "Qatar University"
+                },
+                {
+                    "author_name": "Patrick Tang",
+                    "author_inst": "Sidra Medicine"
+                },
+                {
+                    "author_name": "Peter Coyle",
+                    "author_inst": "Hamad Medical Corporation"
+                },
+                {
+                    "author_name": "HADI M. YASSINE",
+                    "author_inst": "Qatar University"
+                },
+                {
+                    "author_name": "Asmaa Althani",
+                    "author_inst": "QU"
+                },
+                {
+                    "author_name": "Hebah A. Al-Khatib",
+                    "author_inst": "Qatar University"
+                },
+                {
+                    "author_name": "Mohammad R. Hasan",
+                    "author_inst": "Sidra Medicine"
+                },
+                {
+                    "author_name": "Zaina Al-Kanaani",
+                    "author_inst": "Hamad Medical Corporation"
+                },
+                {
+                    "author_name": "Einas Al-Kuwari",
+                    "author_inst": "Hamad Medical Corporation"
+                },
+                {
+                    "author_name": "Andrew Jeremijenko",
+                    "author_inst": "Hamad Medical Corporation"
+                },
+                {
+                    "author_name": "Anvar Hassan Kaleeckal",
+                    "author_inst": "Hamad Medical Corporation"
+                },
+                {
+                    "author_name": "Ali Nizar Latif",
+                    "author_inst": "Hamad Medical Corporation"
+                },
+                {
+                    "author_name": "Riyazuddin Mohammad Shaik",
+                    "author_inst": "Hamad Medical Corporation"
+                },
+                {
+                    "author_name": "Hanan F. Abdul-Rahim",
+                    "author_inst": "Qatar University"
+                },
+                {
+                    "author_name": "Gheyath Nasrallah",
+                    "author_inst": "Qatar University"
+                },
+                {
+                    "author_name": "Mohamed Ghaith Al-Kuwari",
+                    "author_inst": "Primary Health Care Corporation"
+                },
+                {
+                    "author_name": "Adeel A Butt",
+                    "author_inst": "Hamad Medical Corporation"
+                },
+                {
+                    "author_name": "Hamad Eid Al-Romaihi",
+                    "author_inst": "MoPH: Ministry of Public Health Qatar"
+                },
+                {
+                    "author_name": "Mohammed Al-Thani",
+                    "author_inst": "MoPH: Ministry of Public Health Qatar"
+                },
+                {
+                    "author_name": "Abdullatif Al-Khal",
+                    "author_inst": "Hamad Medical Corporation"
+                },
+                {
+                    "author_name": "Roberto Bertollini",
+                    "author_inst": "MoPH: Ministry of Public Health Qatar"
+                },
+                {
+                    "author_name": "Jeremy Samuel Faust",
+                    "author_inst": "Brigham and Women's Hospital"
+                },
+                {
+                    "author_name": "Laith J Abu-Raddad",
+                    "author_inst": "Weill Cornell Medicine-Qatar"
+                }
+            ],
+            "version": "1",
+            "license": "cc_no",
+            "type": "PUBLISHAHEADOFPRINT",
+            "category": "epidemiology",
+            "details": {
+                "jatsxml": "https://www.medrxiv.org/content/early/2022/11/15/2022.11.14.22282103.source.xml"
+            }
+        },
+        {
+            "rel_doi": "10.1101/2022.11.14.22282195",
+            "rel_title": "The Paxlovid Rebound Study: A Prospective Cohort Study to Evaluate Viral and Symptom Rebound Differences Between Paxlovid and Untreated COVID-19 Participants",
+            "rel_date": "2022-11-15",
+            "rel_site": "medRxiv",
+            "rel_link": "https://medrxiv.org/cgi/content/short/2022.11.14.22282195",
+            "rel_abs": "Introduction: The uptake of Paxlovid in individuals infected with COVID-19 has been significantly limited by concerns around the Paxlovid rebound phenomenon despite the scarcity of evidence around its epidemiology. The purpose of this study was to prospectively compare the epidemiology of Paxlovid rebound in treated and untreated participants with acute COVID-19 infection Methods: We designed a digital, prospective observational study, which included participants who tested positive for COVID-19 and were clinically eligible for Paxlovid. Participants were assigned to a Paxlovid or control group based on their decision to take the medication. Both groups were provided 12 rapid antigen tests and asked to test and answer symptom surveys on a regular frequent schedule for 16 days. Viral rebound based on test results and COVID-19 symptom rebound based on patient reported symptoms were evaluated. Results: Viral rebound incidence was 14.2% in the Paxlovid group (n=127) and 9.3% in the control group (n=43). COVID-19 symptom rebound incidence was higher in the Paxlovid group (18.9%) compared to the control group (7.0%). There were no notable differences in viral rebound by age, gender, pre-existing conditions, or major symptom groups during the acute phase or at the 1-month interval. Conclusion: This preliminary report of our prospective study suggests that rebound after clearance of test positivity or symptom resolution is higher than previously reported. However, we observed a similar rate of rebound in both in the Paxlovid and control groups. Large studies with diverse participants and extended follow-up are needed to better understand the rebound phenomena.",
+            "rel_num_authors": 8,
+            "rel_authors": [
+                {
+                    "author_name": "Jay A Pandit",
+                    "author_inst": "Scripps Research Translational Institute"
+                },
+                {
+                    "author_name": "Jennifer M Radin",
+                    "author_inst": "Scripps Research Translational Institute"
+                },
+                {
+                    "author_name": "Danielle Chiang",
+                    "author_inst": "Scripps Research Translational Institute"
+                },
+                {
+                    "author_name": "Emily G Spencer",
+                    "author_inst": "Scripps Research Translational Institute"
+                },
+                {
+                    "author_name": "Jeff B Pawelek",
+                    "author_inst": "Scripps Research Translational Institute"
+                },
+                {
+                    "author_name": "Mira Diwan",
+                    "author_inst": "Scripps Research Translational Institute"
+                },
+                {
+                    "author_name": "Leila Roumani",
+                    "author_inst": "eMed"
+                },
+                {
+                    "author_name": "Michael J Mina",
+                    "author_inst": "eMed"
+                }
+            ],
+            "version": "1",
+            "license": "cc_by",
+            "type": "PUBLISHAHEADOFPRINT",
+            "category": "infectious diseases",
+            "details": {
+                "jatsxml": "https://www.medrxiv.org/content/early/2022/11/15/2022.11.14.22282195.source.xml"
+            }
+        },
+        {
+            "rel_doi": "10.1101/2022.11.15.516323",
+            "rel_title": "The SARS-CoV-2 protein ORF3c is a mitochondrial modulator of innate immunity",
+            "rel_date": "2022-11-15",
+            "rel_site": "bioRxiv",
+            "rel_link": "https://biorxiv.org/cgi/content/short/2022.11.15.516323",
+            "rel_abs": "The SARS-CoV-2 genome encodes a multitude of accessory proteins. Using comparative genomic approaches, an additional accessory protein, ORF3c, has been predicted to be encoded within the ORF3a sgmRNA. Expression of ORF3c during infection has been confirmed independently by ribosome profiling. Despite ORF3c also being present in the 2002-2003 SARS-CoV, its function has remained unexplored. Here we show that ORF3c localises to mitochondria during infection, where it inhibits innate immunity by restricting IFN-{beta} production, but not NF-{kappa}B activation or JAK-STAT signalling downstream of type I IFN stimulation. We find that ORF3c acts after stimulation with cytoplasmic RNA helicases RIG-I or MDA5 or adaptor protein MAVS, but not after TRIF, TBK1 or phospho-IRF3 stimulation. ORF3c co-immunoprecipitates with the antiviral proteins MAVS and PGAM5 and induces MAVS cleavage by caspase-3. Together, these data provide insight into an uncharacterised mechanism of innate immune evasion by this important human pathogen.",
+            "rel_num_authors": 20,
+            "rel_authors": [
+                {
+                    "author_name": "Hazel Stewart",
+                    "author_inst": "University of Cambridge"
+                },
+                {
+                    "author_name": "Yongxu Lu",
+                    "author_inst": "University of Cambridge"
+                },
+                {
+                    "author_name": "Anusha Valpadashi",
+                    "author_inst": "University Medical Center Goettingen"
+                },
+                {
+                    "author_name": "Luis Daniel Cruz-Zaragoza",
+                    "author_inst": "University Medical Center Goettingen"
+                },
+                {
+                    "author_name": "Hendrik A Michel",
+                    "author_inst": "Harvard Graduate Program in Virology"
+                },
+                {
+                    "author_name": "Samantha K Nguyen",
+                    "author_inst": "University of Cambridge"
+                },
+                {
+                    "author_name": "George W Carnell",
+                    "author_inst": "University of Cambridge"
+                },
+                {
+                    "author_name": "Nina Lukhovitskaya",
+                    "author_inst": "University of Cambridge"
+                },
+                {
+                    "author_name": "Rachel Milligan",
+                    "author_inst": "University of Bristol"
+                },
+                {
+                    "author_name": "Irwin Jungreis",
+                    "author_inst": "MIT"
+                },
+                {
+                    "author_name": "Valeria Lulla",
+                    "author_inst": "University of Cambridge"
+                },
+                {
+                    "author_name": "Andrew D Davidson",
+                    "author_inst": "University of Bristol"
+                },
+                {
+                    "author_name": "David A Matthews",
+                    "author_inst": "University of Bristol"
+                },
+                {
+                    "author_name": "Stephen High",
+                    "author_inst": "University of Manchester"
+                },
+                {
+                    "author_name": "Peter Rehling",
+                    "author_inst": "Univ. Goettingen"
+                },
+                {
+                    "author_name": "Edward Emmott",
+                    "author_inst": "University of Liverpool"
+                },
+                {
+                    "author_name": "Jonathan Luke Heeney",
+                    "author_inst": "University of Cambridge"
+                },
+                {
+                    "author_name": "James R Edgar",
+                    "author_inst": "University of Cambridge"
+                },
+                {
+                    "author_name": "Geoffrey  L. Smith",
+                    "author_inst": "University of Cambridge"
+                },
+                {
+                    "author_name": "Andrew E Firth",
+                    "author_inst": "University of Cambridge"
+                }
+            ],
+            "version": "1",
+            "license": "cc_by",
+            "type": "new results",
+            "category": "microbiology",
+            "details": {
+                "jatsxml": "https://www.biorxiv.org/content/early/2022/11/15/2022.11.15.516323.source.xml"
+            }
+        }
+    ]
+}

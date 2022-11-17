@@ -1,0 +1,12 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: jatsxml-processor-metrics
+  labels:
+    app: jatsxml
+spec:
+  endpoints:
+  - port: metrics
+  selector:
+    matchLabels:
+      app: jatsxml

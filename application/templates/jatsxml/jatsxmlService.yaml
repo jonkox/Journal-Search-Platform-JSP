@@ -1,0 +1,12 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: jatsxml-processor-metrics-service
+  labels:
+    app: jatsxml
+spec:
+  selector:
+    app: jatsxml
+  ports:
+  - name: metrics
+    port: 6941
