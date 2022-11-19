@@ -73,7 +73,7 @@ class Loader:
     def __init__(self):
 
         #Starting server where we send metrics
-        start_http_server(PORTSERVER)
+        start_http_server(int(PORTSERVER))
 
         #Setting up all necessary things
         self.connectMariaDB()
@@ -193,7 +193,7 @@ class Loader:
     def transaction(self):
         while True:
             try:
-                sleep(1)
+                sleep(int(SLEEPTIME))
                 #Start a transaction
                 self.CUR.execute("START TRANSACTION")
                 self.process_job()
