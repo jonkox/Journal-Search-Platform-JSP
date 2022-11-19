@@ -1,0 +1,12 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: loader-processor-metrics-service
+  labels:
+    app: loader
+spec:
+  selector:
+    app: loader
+  ports:
+  - name: metrics
+    port: {{.Values.loader.portserver}}

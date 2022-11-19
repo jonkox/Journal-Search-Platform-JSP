@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loader-processor
+  labels:
+    app: loader
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loader
+  template:
+    metadata:
+      labels:
+        app: loader
+    spec:
+      containers:
+      - name: loader-processor
+        image: jonkox/loader
+        ports:
+          - name: metrics
+            containerPort: 6943
+        env:
+          - name: "RABBITHOST"
+            value: {{ .Values.general.rabbithost }}
+          - name: "RABBITPORT"
+            value: {{ .Values.general.rabbitport | quote }}
+          - name: "RABBITUSER"
+            value: {{ .Values.general.rabbituser }}
+          - name: "RABBITPASS"
+            valueFrom:
+              secretKeyRef:
+                name: databases-rabbitmq
+                key: rabbitmq-password
+                optional: false
+          - name: "RABBITDEST"
+            value: {{ .Values.loader.destqueue }}
+
+
+          - name: "MARIADBNAME"
+            value: {{ .Values.general.mariadbname }}
+          - name: "MARIADBHOST"
+            value: {{ .Values.general.mariadbhost }}
+          - name: "MARIADBPORT"
+            value: {{ .Values.general.mariadbport | quote }}
+          - name: "MARIADBUSER"
+            value: {{ .Values.general.mariadbuser }}
+          - name: "MARIADBPASS"
+            valueFrom:
+              secretKeyRef:
+                name: databases-mariadb
+                key: mariadb-root-password
+                optional: false
+
+
+          - name: "APIBIORXIV"
+            value: {{.Values.loader.apibiorxiv}}
+          - name: "SLEEPTIME"
+            value: {{.Values.loader.sleeptime}}
+          - name: "PORTSERVER"
+            value: {{.Values.loader.portserver}}
