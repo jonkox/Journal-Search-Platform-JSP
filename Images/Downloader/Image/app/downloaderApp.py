@@ -5,6 +5,7 @@ import mariadb
 import datetime
 import json
 import logging
+import os
 
 from elasticsearch import Elasticsearch
 from prometheus_client import Gauge, start_http_server
@@ -12,28 +13,28 @@ from time import sleep, time
 from urllib.request import urlopen
 
 # ------------- Used for testing without environment variables -----------
-ELASTICHOST = "http://localhost"
-ELASTICPORT = "32500"
-ELASTICUSER = "elastic" 
-ELASTICPASS = "m2Hl6qYVLMNFDfdZ" 
-ELASTICINDEX = "groups"
+# ELASTICHOST = "http://localhost"
+# ELASTICPORT = "32500"
+# ELASTICUSER = "elastic" 
+# ELASTICPASS = "m2Hl6qYVLMNFDfdZ" 
+# ELASTICINDEX = "groups"
 
-RABBITHOST = 'localhost'
-RABBITPORT = '30100'
-RABBITUSER = 'user'
-RABBITPASS = 'iX4rMustwltDPp7Y'
-RABBITQUEUENAMEINPUT = 'loader'
-RABBITQUEUENAMEOUTPUT ='downloader'
+# RABBITHOST = 'localhost'
+# RABBITPORT = '30100'
+# RABBITUSER = 'user'
+# RABBITPASS = 'iX4rMustwltDPp7Y'
+# RABBITQUEUENAMEINPUT = 'loader'
+# RABBITQUEUENAMEOUTPUT ='downloader'
 
-MARIADBNAME = "my_database"
-MARIADBHOST = "localhost"
-MARIADBPORT = 32100
-MARIADBUSER = "root"
-MARIADBPASS = "9xyqnMJvfy"
+# MARIADBNAME = "my_database"
+# MARIADBHOST = "localhost"
+# MARIADBPORT = 32100
+# MARIADBUSER = "root"
+# MARIADBPASS = "9xyqnMJvfy"
 
 
 # ------------ ENVIRONMENT  VARIABLES FOR CONNECTIONS -------
-"""
+
 # Elasticsearch
 ELASTICHOST = os.getenv("ELASTICHOST")
 ELASTICPORT = os.getenv("ELASTICPORT")
@@ -55,7 +56,8 @@ MARIADBHOST = os.getenv("MARIADBHOST")
 MARIADBPORT = os.getenv("MARIADBPORT")
 MARIADBUSER = os.getenv("MARIADBUSER")
 MARIADBPASS = os.getenv("MARIADBPASS")
-"""
+
+
 # Class for printing colors
 class bcolors:
     OK      = '\033[92m'    #GREEN
@@ -82,7 +84,6 @@ class Downloader:
     url = "https://api.biorxiv.org/covid19/0"   # ---------- CAMBIAR LUEGO -------------
     #url = os.getenv("API_BIORVIX_URL")
 
-    logger = logging.getLogger('downloaderLogger')
     grp_id = None
     id_job = None
 
@@ -99,7 +100,7 @@ class Downloader:
 
         self.numberOfProcessedGroups = Gauge(
             'espublisher_number_processed_groups', 
-            'Number of Jobs process by elasticsearch publisher')
+            'Number of groups process by downloader')
         
         self.amountDownloadedDocuments = Gauge(
             'downloader_amount_downloaded_docs', 
@@ -215,7 +216,7 @@ class Downloader:
         self.mariadbCursor.execute(grp_id_query, (self.grp_id,))
         grp_id = int(self.mariadbCursor.fetchone()[0])
 
-        component = 'downloader' # Identificador del pod, TEMPORALMENTE downloader
+        component = 'downloader' # os.env("HOSTNAME")
 
         # Get created datetime 
         current_datetime = datetime.datetime.now()
@@ -306,12 +307,10 @@ class Downloader:
         # Get job_id from the document that was received
         # self.id_job = int(jsonObject["id_job"])
         self.id_job = jsonObject["id_job"]
-        print(self.id_job)
 
         # Get group_id from the document that was received
         # self.grp_id = int(jsonObject["grp_number"])
         self.grp_id = jsonObject["grp_number"]
-        print(self.grp_id)
 
         # -------- Update group table ---------------
         self.updateGrpTable()
@@ -373,7 +372,7 @@ class Downloader:
         print(f"{bcolors.OK} Downloader: {bcolors.RESET} Message was received")
         json_object = json.loads(body)
         print(json_object)
-
+        
         try:
             self.workForPod(json_object)
             
