@@ -9,7 +9,7 @@ class bcolors:
     RESET   = '\033[0m'     #RESET COLOR
 
 def loaderFinishedProcess():
-    rabbitUserPass = pika.PlainCredentials("user","iX4rMustwltDPp7Y")
+    rabbitUserPass = pika.PlainCredentials("user","C12zaCZPRM1FCGpD")
     rabbitConnectionParameters = pika.ConnectionParameters(
             host='localhost', 
             port='30100',
@@ -26,9 +26,12 @@ def loaderFinishedProcess():
     dataFromFile = f.read()
 
     # Simulation: Send message from "loader" to downloader app
+    channel.queue_declare(queue = QUEUE_NAME_INPUT)
     channel.basic_publish(exchange='', routing_key=QUEUE_NAME_INPUT, body=dataFromFile)
 
+
     print(f"{bcolors.OK} Simulation: Got msg from queue, start process {bcolors.RESET}")
+    print(dataFromFile)
 
     connection.close()
 
