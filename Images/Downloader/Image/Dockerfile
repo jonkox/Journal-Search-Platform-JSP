@@ -17,4 +17,4 @@ RUN apt-get install -y libmariadb3 libmariadb-dev
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python","-u","./app.py"]
+CMD ["python","-u","./downloaderApp.py"]
