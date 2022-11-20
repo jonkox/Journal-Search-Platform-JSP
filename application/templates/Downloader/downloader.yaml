@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: downloader
+  labels:
+    app: downloader
+spec:
+  replicas: {{ .Values.downloader.replicas }}
+  selector:
+    matchLabels:
+      app: downloader
+  template:
+    metadata:
+      labels:
+        app: downloader
+    spec:
+      containers:
+      - name: downloader
+        image: ihuskyx/downloader
+        env:
+          - name: "ELASTICHOST"
+            value: {{ .Values.general.elastichost }}
+          - name: "ELASTICPORT"
+            value: {{ .Values.general.elasticport | quote }}
+          - name: "ELASTICUSER"
+            value: {{ .Values.general.elasticuser }}
+          - name: "ELASTICPASS"
+            valueFrom:
+              secretKeyRef:
+                name: databases-elasticsearch
+                key: elasticsearch-password
+                optional: false
+          - name: "ELASTICINDEX"
+            value: {{ .Values.downloader.elasticindex }}
+          - name: "RABBITHOST"
+            value: {{ .Values.general.rabbithost }}
+          - name: "RABBITPORT"
+            value: {{ .Values.general.rabbitport | quote }}
+          - name: "RABBITUSER"
+            value: {{ .Values.general.rabbituser }}
+          - name: "RABBITPASS"
+            valueFrom:
+              secretKeyRef:
+                name: databases-rabbitmq
+                key: rabbitmq-password
+                optional: false
+          - name: "RABBITQUEUENAMEINPUT"
+            value: {{ .Values.downloader.rabbitqueuenameinput }}
+          - name: "RABBITQUEUENAMEOUTPUT"
+            value: {{ .Values.downloader.rabbitqueuenameoutput }}
+          - name: "MARIADBNAME"
+            value: {{ .Values.general.mariadbname }}
+          - name: "MARIADBHOST"
+            value: {{ .Values.general.mariadbhost }}
+          - name: "MARIADBPORT"
+            value: {{ .Values.general.mariadbport | quote }}
+          - name: "MARIADBUSER"
+            value: {{ .Values.general.mariadbuser }}
+          - name: "MARIADBPASS"
+            valueFrom:
+              secretKeyRef:
+                name: databases-mariadb
+                key: mariadb-root-password
+                optional: false
+          - name: "APIBIORVIXURL"
+            value: {{ .Values.general.api_bioXriv_url }}

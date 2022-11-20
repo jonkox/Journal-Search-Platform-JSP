@@ -1,0 +1,24 @@
+general:
+  # Elastic
+  elastichost: "http://databases-elasticsearch-master-hl.default.svc.cluster.local"
+  elasticport: 9200
+  elasticuser: "elastic"
+
+  # RabbitMQ
+  rabbithost: "databases-rabbitmq-headless"
+  rabbitport: 5672
+  rabbituser: "user"
+
+  # Mariadb
+  mariadbname: "my_database"
+  mariadbhost: "databases-mariadb-primary"
+  mariadbport: 3306
+  mariadbuser: "root"
+
+  api_bioXriv_url: "https://api.biorxiv.org/covid19/"
+
+downloader:
+  rabbitqueuenameinput: "loader"
+  rabbitqueuenameoutput: "downloader"
+  elasticindex: "groups"
+  replicas: 3
