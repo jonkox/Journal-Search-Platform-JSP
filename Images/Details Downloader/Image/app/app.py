@@ -10,8 +10,6 @@ import pika
 import os
 import time
 import requests
-#TODO: add requests to requirements.txt
-#TODO: add publish and consume to and from queue methods
 # RabbitMQ
 RABBITHOST = os.getenv("RABBITHOST")
 RABBITPORT = os.getenv("RABBITPORT")
@@ -269,4 +267,27 @@ class DetailsDownloader:
         self.__currentDoc["docs"] = docs
         self.__elasticClient.index(index="groups",id=self.__currentDocId,document=self.__currentDoc)
         return False
-    
+
+    # Method to initialize consuming queue and the publishing queue
+    def initQueues(self):
+        rabbitUserPass = pika.PlainCredentials(RABBITUSER,RABBITPASS)
+        rabbitParameters = pika.ConnectionParameters(
+            heartbeat=120,
+            blocked_connection_timeout=120,
+            host=RABBITHOST,
+            port=RABBITPORT,
+            credentials=rabbitUserPass
+        )
+        try:
+            self.__consumerQueue = pika.BlockingConnection(rabbitParameters).channel()
+            self.__publishQueue = pika.BlockingConnection(rabbitParameters).channel()
+            self.__consumerQueue.basic_qos(prefetch_count=1)
+        except pika.exceptions.AMQPConnectionError:
+            # We can't continue without a queue to get data from 
+            # and to publish our results
+            raise Exception("Error: Couldn't connect to RabbitMQ")
+        self.__consumerQueue.queue_declare(queue=RABBITCONSUMEQUEUE)
+        self.__publishQueue.queue_declare(queue=RABBITPUBLISHQUEUE)
+
+        self.__consumerQueue.basic_consume(queue=RABBITCONSUMEQUEUE, on_message_callback=self.consume, auto_ack=False)
+
