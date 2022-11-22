@@ -32,13 +32,27 @@ MARIADBUSER             =   os.getenv("MARIADBUSER")
 MARIADBPASS             =   os.getenv("MARIADBPASS")
 
 #BioRxiv
-APIBIORXIV              =   os.getenv("APIBIORXIV")
+APIBIORXIV              =   "https://api.biorxiv.org/covid19/0" #os.getenv("APIBIORXIV")
 
 #Pod's name
 PODNAME                 =   os.getenv("HOSTNAME")
 
-SLEEPTIME               =   os.getenv("SLEEPTIME")
-PORTSERVER              =   os.getenv("PORTSERVER")
+SLEEPTIME               =   1    #os.getenv("SLEEPTIME")
+PORTSERVER              =   6343 #os.getenv("PORTSERVER")
+
+MARIADBNAME = "my_database"
+MARIADBHOST = "localhost"
+MARIADBPORT = 32100
+MARIADBUSER = "root"
+MARIADBPASS = "3VopN5R26q"
+
+
+#RABBITMQ
+RABBITHOST          =   "localhost"         #os.getenv("RABBITHOST")
+RABBITPORT          =   "30100"             #os.getenv("RABBITPORT")
+RABBITUSER          =   "user"              #os.getenv("RABBITUSER")
+RABBITPASS          =   "kU0eN0mRWq4Q0eVu"  #os.getenv("RABBITPASS")
+RABBITDEST          =   "REGEX-FUENTE"      #os.getenv("RABBITQUEUENAME")
 
 
 #---------------------------------------------------------------------------------------------------------------------------------------------
@@ -64,6 +78,7 @@ class Loader:
     PROCESSEDGROUPS     =   None    #Total quantity of groups has been processed
     ERRORS              =   None    #Quantity of errors that has been ocur
     JOBSDONE            =   None    #Quantity of jobs that has been processed
+    TOTALMESSAGES = None
     STMT                =   "SELECT id,created,status,end,loader,grp_size FROM jobs WHERE status = 'new' LIMIT 1"
     AVGTIME             =   Summary(
                             'loader_avg_processing_time', 
@@ -131,36 +146,45 @@ class Loader:
                         )"
 
 
-        storeProcedure = """CREATE PROCEDURE get_new_job(IN len INT, IN grps INT, IN pod varchar(50))
-                                begin
-                                    declare vID int;
-                                    declare job_exists bool;
-                                    DECLARE control INT default 0;
-                                    DECLARE offsetAux INT default 0;
-                                    DECLARE ofst INT default 0;
-                                    
-                                    
-                                    if (select count(*) from jobs where jobs.status = 'new' limit len) >= 1 THEN
-                                        START TRANSACTION;
-                                        
-                                        select id into vID from jobs where jobs.status = 'new' limit len;
-                                        select grp_size into ofst from jobs where jobs.id = vID;
-                                        set grps = floor(grps/ofst)+1;
+        storeProcedure = """
+CREATE PROCEDURE get_new_job(IN len INT, IN grps INT, IN pod varchar(50))
+	begin
+    declare vID int;
+	declare job_exists bool;
+	DECLARE control INT default 0;
+	DECLARE offsetAux INT default 0;
+	DECLARE ofst INT default 0;
+    
+    
+	if (select count(*) from jobs where jobs.status = 'new' limit len) >= 1 THEN
+		
 
-                                        while control < grps DO
-                                            INSERT INTO my_database.groups(id_job,created,end,stage,grp_number,status,`offset`) VALUES (vID,now(),null,'Loader',control,null,offsetAux);
-                                            SET control = control + 1;
-                                            set offsetAux = offsetAux + ofst;
-                                        end while;
+		START TRANSACTION;
+		
+        
+		select id into vID from jobs where jobs.status = 'new' limit len;
+		select grp_size into ofst from jobs where jobs.id = vID;
+        set grps = floor(grps/ofst)+1;
 
-                                        UPDATE jobs SET status = 'IN PROGRESS' WHERE id = vID;
-                                        UPDATE jobs SET loader = pod WHERE id = vID;
-                                        select count(*) from my_database.groups where id_job = vID
-                                        UNION
-                                        select id from my_database.jobs where id = vID;
-                                        commit;
-                                    END IF;
-                                end"""
+		while control < grps DO
+			INSERT INTO my_database.groups(id_job,created,end,stage,grp_number,status,`offset`) VALUES (vID,now(),null,'Loader',control,null,offsetAux);
+			SET control = control + 1;
+			set offsetAux = offsetAux + ofst;
+
+		end while;
+
+		UPDATE jobs SET status = 'IN PROGRESS' WHERE id = vID;
+        UPDATE jobs SET loader = pod WHERE id = vID;
+        select count(*) from my_database.groups where id_job = vID
+        UNION
+        select id from my_database.jobs where id = vID;
+
+		commit;
+	END IF;
+
+	end
+
+        """
 
 
         
@@ -222,40 +246,40 @@ class Loader:
         response = requests.get(APIBIORXIV)
         data = json.loads(response.text)
         total = data["messages"][0]["total"]
+        self.TOTALMESSAGES = data["messages"][0]["total"]
 
         groups = total / grp_size
 
         return math.ceil(groups)
+    
 
+    def algo(self):
+        UPDATE jobs SET `status` = 'In-progress', loader= 'algo',id=last_insert_id(id) WHERE `status` = 'new' LIMIT 1
 
-    def job_process(self):
-
-        print(f"{bcolors.OK}Processing: {bcolors.RESET}Start job processing.")
-        self.CUR.callproc('get_new_job',(1,self.TOTALMESSAGES,PODNAME))
-        processedGroups = self.CUR.fetchall()
-        
-        for i in range(int(processedGroups[0][0])):
-            self.MSG = {"id_job":processedGroups[1][0], "grp_number": i}
-            self.produce(self.MSG)
-            self.PROCESSEDGROUPS.inc()
-            print(f"{bcolors.OK}Processing: {bcolors.RESET}Group processed {self.MSG}")
-        
 
     #The main loop, continuously checks for new jobs and processes it
     def transaction(self):
-        self.get_info(11)
+        self.get_info(23)
         while True:
             try:
                 sleep(int(SLEEPTIME))
-                
                 #Start a transaction
-                self.process_job()
-                self.CONN.commit()
+                #self.CUR.execute(f"CALL get_new_job(1,{str(self.TOTALMESSAGES)},'LOADER-1123234-3234234');")
+                self.CUR.callproc('get_new_job',(1,self.TOTALMESSAGES,'Loader-234-345'))
+                
+                processedGroups = self.CUR.fetchall()
 
+                for i in range(int(processedGroups[0][0])):
+                    self.MSG = {"id_job":processedGroups[1][0], "grp_number": i}
+                    self.produce(self.MSG)
+                    self.PROCESSEDGROUPS.inc()
+                    print(f"{bcolors.OK}Processing: {bcolors.RESET}Group processed {self.MSG}")
                 
             #Error handling
             except mariadb.ProgrammingError as e:
                 print(f"{bcolors.FAIL}ERROR: {bcolors.RESET} {e}")
+                print(f"{bcolors.FAIL}ERROR: {bcolors.RESET} CREATING TABLES")
+                self.initTables()
                 self.ERRORS.inc()
 
     #This function creates the number of groups that the job needs
@@ -265,7 +289,7 @@ class Loader:
             
             for i in range(grps):
                 try:
-                
+                    self.get_info()
                     self.CUR.execute(f"INSERT INTO groups(id_job,created,end,stage,grp_number,status,`offset`)\
                                         VALUES ({str(id)},now(),null,'Loader',{str(i)},null,{str(offset)})")
                     
