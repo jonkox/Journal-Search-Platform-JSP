@@ -68,6 +68,7 @@ class Loader:
     AVGTIME             =   Summary(
                             'loader_avg_processing_time', 
                             'Average amount of time elapsed when processing')
+    TOTALMESSAGES       =   0
     
     #Constructor method
     def __init__(self):
@@ -222,7 +223,7 @@ class Loader:
         response = requests.get(APIBIORXIV)
         data = json.loads(response.text)
         total = data["messages"][0]["total"]
-
+        self.TOTALMESSAGES = data["messages"][0]["total"]
         groups = total / grp_size
 
         return math.ceil(groups)
@@ -250,7 +251,7 @@ class Loader:
                 
                 #Start a transaction
                 self.process_job()
-                self.CONN.commit()
+                #self.CONN.commit()
 
                 
             #Error handling
@@ -265,8 +266,9 @@ class Loader:
             
             for i in range(grps):
                 try:
-                
-                    self.CUR.execute(f"INSERT INTO groups(id_job,created,end,stage,grp_number,status,`offset`)\
+                    print(f"INSERT INTO groups(id_job,created,end,stage,grp_number,status,`offset`) \
+                                        VALUES ({str(id)},now(),null,'Loader',{str(i)},null,{str(offset)})")
+                    self.CUR.execute(f"INSERT INTO groups(id_job,created,end,stage,grp_number,status,`offset`) \
                                         VALUES ({str(id)},now(),null,'Loader',{str(i)},null,{str(offset)})")
                     
                     offset += length
@@ -280,36 +282,33 @@ class Loader:
                 except mariadb.ProgrammingError as e:
                     print(f"{bcolors.FAIL}ERROR: {bcolors.RESET} {e}")
                     self.ERRORS.inc()
+            self.CONN.commit()
 
     #process_job processes a job and creates its respective groups.
     @AVGTIME.time()
     def process_job(self):
-        self.CUR.execute(self.STMT)
-        lis = self.CUR.fetchall()
+        #self.CUR.execute(self.STMT)
+        #lis = self.CUR.fetchall()
 
         s=f"UPDATE jobs SET `status` = 'In-progress', loader='{str(PODNAME)}' ,id=last_insert_id(id) WHERE `status` = 'new' LIMIT 1"
-        if lis != []:
+        self.CUR.execute(s)
+        self.CONN.commit()
+        id_job = self.CUR.lastrowid
+        if id_job != None:
             #lis always will have JUST ONE job because the SQL statement is limited by one
             try:
-                for i in lis:
-                    self.CUR.execute(f"UPDATE jobs SET \
-                                status = 'IN PROGRESS', \
-                                loader = '{str(PODNAME)}' \
-                                WHERE id = {str(i[0])}")    #Updates the job
-
-                    length = i[5]                           #takes the group size
-                    grps = self.get_info(length)            #return the number of groups we need
-                    self.create_groups(length,i[0],grps)    #create the groups
+                self.CUR.execute(f"SELECT grp_size FROM jobs WHERE id = {id_job}")    #Updates the job
+                length = self.CUR.fetchone()[0]                           #takes the group size
+                grps = self.get_info(length)            #return the number of groups we need
+                self.create_groups(length,id_job,grps)    #create the groups
 
                 self.JOBSDONE.inc()                         #Icrements the counter
-
                 return False
 
             except mariadb.ProgrammingError as e:
                 print(f"{bcolors.FAIL}ERROR: {bcolors.RESET} {e}")
                 self.ERRORS.inc()
-        
-        if lis == []:
+        else:
             return True
     
     #Connects to MariaDB
