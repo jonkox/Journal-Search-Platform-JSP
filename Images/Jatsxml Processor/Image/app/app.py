@@ -118,8 +118,8 @@ class JatsxmlProcessor:
         # Mappings to avoid elasticsearch changing data types
         mappings = {
             "properties": {
-                "details.jatsxml.article.front.article-meta.pub-date.@hwp:start": {
-                "type": "text"
+                "details.jatsxml": {
+                    "enabled" : False
                 }
             }
         }
@@ -129,7 +129,7 @@ class JatsxmlProcessor:
             if(not (self.__elasticClient.indices.exists(index=["groups"]))):
                 self.__elasticClient.indices.create(index="groups")
             if(not (self.__elasticClient.indices.exists(index=[ELASTICINDEX]))):
-                self.__elasticClient.indices.create(index=ELASTICINDEX,mappings=mappings)
+                self.__elasticClient.indices.create(index=ELASTICINDEX,mappings=mappings,settings={'mapping':{'ignore_malformed':True}})
             return True
         except elastic_transport.ConnectionError:
             # We raise an exception because the process can't continue
@@ -242,8 +242,8 @@ class JatsxmlProcessor:
         try:
             jats = requests.get(currentJatsLink)
         except requests.exceptions.MissingSchema:
-            print(f'{bcolors.FAIL}Error:{bcolors.RESET} jatsxml url is invalid  \
--> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+            print(f'{bcolors.FAIL}Error:{bcolors.RESET} jatsxml url is invalid' +
+                f' -> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
             )
             self.__historyMessage = "While processing docs, one or more docs didn't get a valid jatsxml json equivalent"
             self.__errorCount.inc()
@@ -252,16 +252,15 @@ class JatsxmlProcessor:
         try:
             currentObtainJatsxml=xmltodict.parse(jats.content)
         except parsers.expat.ExpatError:
-            print(f'{bcolors.FAIL}Error:{bcolors.RESET} invalid jatsxml format \
--> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
-            
+            print(f'{bcolors.FAIL}Error:{bcolors.RESET} invalid jatsxml format' +
+                f' -> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
             )
             self.__historyMessage = "While processing docs, one or more docs didn't get a valid jatsxml json equivalent"
             self.__errorCount.inc()
             return "Failed"
 
-        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at getting Jatsxml" \
--> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at getting Jatsxml' +
+            f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
         )
         return currentObtainJatsxml
 
@@ -277,16 +276,15 @@ class JatsxmlProcessor:
             cursor.execute(updateQuery)
             self.__mariaClient.commit()
         except mariadb.ProgrammingError:
-            print(f'{bcolors.FAIL}Error:{bcolors.RESET} couldn\'t update group table" \
--> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+            print(f'{bcolors.FAIL}Error:{bcolors.RESET} couldn\'t update group table' +
+                f' -> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
             )
             self.__historyMessage = "Error in updateGroup() function: Couldn't update group"
             self.__errorCount.inc()
             return True
         
-        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at updating group table \
--> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
-        
+        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at updating group table' +
+            f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
         )
         return False
 
@@ -303,14 +301,14 @@ class JatsxmlProcessor:
             cursor.execute(updateQuery)
             self.__mariaClient.commit()
         except mariadb.ProgrammingError:
-            print(f'{bcolors.FAIL}Error:{bcolors.RESET} couldn\'t update group table \
--> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+            print(f'{bcolors.FAIL}Error:{bcolors.RESET} couldn\'t update group table' +
+                f' -> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
             )
             self.__historyMessage = "Error in finishedGroup() function: Couldn't update group table"
             self.__errorCount.inc()
             return True
-        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at updating group table \
--> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at updating group table' +
+            f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
         )
         return False
 
@@ -322,8 +320,8 @@ class JatsxmlProcessor:
         try:
             cursor.execute(checkQuery)
         except mariadb.ProgrammingError:
-            print(f'{bcolors.FAIL}Error:{bcolors.RESET} couldn\'t read jobs table \
--> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+            print(f'{bcolors.FAIL}Error:{bcolors.RESET} couldn\'t read jobs table' +
+                f' -> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
             )
             self.__historyMessage = "Error in finishedJob() function: Couldn't read jobs table"
             self.__errorCount.inc()
@@ -332,8 +330,8 @@ class JatsxmlProcessor:
         try:
             currentInprocessGroups = cursor.fetchone()[0]
         except IndexError:
-            print(f'{bcolors.FAIL}Error:{bcolors.RESET} didn\'t get a valid response from jobs table \
--> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+            print(f'{bcolors.FAIL}Error:{bcolors.RESET} didn\'t get a valid response from jobs table' +
+                f' -> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
             )
             self.__historyMessage = "Error in finishedJob() function: Didn't get a valid response from jobs table"
             self.__errorCount.inc()
@@ -348,19 +346,19 @@ class JatsxmlProcessor:
                 cursor.execute(updateJobQuery)
                 self.__mariaClient.commit()
             except mariadb.ProgrammingError:
-                print(f'{bcolors.FAIL}Error:{bcolors.RESET} couldn\'t update jobs table \
--> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+                print(f'{bcolors.FAIL}Error:{bcolors.RESET} couldn\'t update jobs table' +
+                    f' -> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
                 )
                 self.__historyMessage = "Error in finishedJob() function: Couldn't update jobs table"
                 self.__errorCount.inc()
                 return True
-            print(f'{bcolors.OK}Processing:{bcolors.RESET} success at updating jobs table \
--> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+            print(f'{bcolors.OK}Processing:{bcolors.RESET} success at updating jobs table' +
+                f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
             )
             return False
         
-        print(f'{bcolors.OK}Processing:{bcolors.RESET} job isn\'t yet completed, continuing process \
--> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+        print(f'{bcolors.OK}Processing:{bcolors.RESET} job isn\'t yet completed, continuing process' +
+            f' -> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
         )
         return False
 
@@ -371,8 +369,8 @@ class JatsxmlProcessor:
         try:
             groupId = cursor.fetchone()[0]
         except IndexError:
-            print(f'{bcolors.FAIL}Error:{bcolors.RESET} couldn\'t find group in database \
--> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+            print(f'{bcolors.FAIL}Error:{bcolors.RESET} couldn\'t find group in database' +
+                f'-> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
             )
             self.__errorCount.inc()
             return True
@@ -385,13 +383,13 @@ class JatsxmlProcessor:
             self.__historyId = cursor.lastrowid
             self.__mariaClient.commit()
         except mariadb.ProgrammingError:
-            print(f'{bcolors.FAIL}Error:{bcolors.RESET} couldn\'t create a new registry in table history \
--> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+            print(f'{bcolors.FAIL}Error:{bcolors.RESET} couldn\'t create a new registry in table history' +
+                f' -> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
             )
             self.__errorCount.inc()
             return True
-        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at creating new registry in history table \
--> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at creating new registry in history table' +
+            f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
         )
         return False
 
@@ -413,12 +411,12 @@ class JatsxmlProcessor:
             cursor.execute(updateHistoryQuery)
             self.__historyId = cursor.lastrowid
             self.__mariaClient.commit()
-            print(f'{bcolors.OK}Processing:{bcolors.RESET} success at modifying history \
--> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+            print(f'{bcolors.OK}Processing:{bcolors.RESET} success at modifying history' +
+                f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
             )
         except mariadb.ProgrammingError:
-            print(f'{bcolors.FAIL}Error:{bcolors.RESET} couldn\'t modify history table \
--> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+            print(f'{bcolors.FAIL}Error:{bcolors.RESET} couldn\'t modify history table' +
+                f' -> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
             )
             self.__errorCount.inc()
             return True
@@ -446,15 +444,15 @@ class JatsxmlProcessor:
             self.__currentGroup = search["hits"]["hits"][0]["_source"]
             self.__currentGroupId = search["hits"]["hits"][0]["_id"]
         except IndexError:
-            print(f'{bcolors.FAIL}Error:{bcolors.RESET} Didn\'t find group \
--> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+            print(f'{bcolors.FAIL}Error:{bcolors.RESET} Didn\'t find group' +
+                f' -> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
             )
             self.__historyMessage = "Error in getGroupFromElastic() function: Group was't found in Elasticsearch"
             self.__errorCount.inc()
             return True
         
-        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at getting group from elastic \
--> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at getting group from elastic' +
+            f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
         )
         return False
 
@@ -467,20 +465,20 @@ class JatsxmlProcessor:
             else:
                 self.__notProcessedJatsxml.inc()
             self.__elasticClient.index(index=ELASTICINDEX, document=doc, refresh='wait_for')
-            print(f'{bcolors.OK}Processing:{bcolors.RESET} success at publishing new doc \
--> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+            print(f'{bcolors.OK}Processing:{bcolors.RESET} success at publishing new doc' +
+                f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
             )
         self.__elasticClient.delete(index="groups", id=self.__currentGroupId)
-        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at deleting group \
--> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at deleting group' +
+            f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
         )
         return False
 
     # Method that has all the processing
     def processing(self):
         if ("id_job" not in self.__currentMessage or "grp_number" not in self.__currentMessage):
-            print(f'{bcolors.FAIL}Error:{bcolors.RESET} invalid message obtain from queue \
--> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+            print(f'{bcolors.FAIL}Error:{bcolors.RESET} invalid message obtain from queue' +
+                f' -> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
             )
             self.__errorCount.inc()
             return True
@@ -518,8 +516,9 @@ class JatsxmlProcessor:
         
         self.modifyHistory(result)
 
-        print(f'{bcolors.OK}Group finished:{bcolors.RESET} -> \
-{bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}')
+        print(f'{bcolors.OK}Group finished:{bcolors.RESET} ->' +
+            f' {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+        )
 
         self.__processedGroups.inc()
 
