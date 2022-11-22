@@ -8,19 +8,19 @@ import os
 ELASTICHOST = "http://localhost"#os.getenv("ELASTICHOST")
 ELASTICPORT = "32500"#os.getenv("ELASTICPORT")
 ELASTICUSER = "elastic" #os.getenv("ELASTICUSER")
-ELASTICPASS = "B8DbB6rA1FisP8ZD" #os.getenv("ELASTICPASS")
+ELASTICPASS = "IzcPIZsyMsLk6E5s" #os.getenv("ELASTICPASS")
 
 MARIADBNAME = "my_database" #os.getenv("MARIADBNAME")
 MARIADBHOST = "localhost" #os.getenv("MARIADBHOST")
 MARIADBPORT = "32100" #os.getenv("MARIADBPORT")
 MARIADBUSER = "root" #os.getenv("MARIADBUSER")
-MARIADBPASS = "O0wP5VaZ01" #os.getenv("MARIADBPASS")
+MARIADBPASS = "jtGlurMZin" #os.getenv("MARIADBPASS")
 
 # RabbitMQ
 RABBITHOST = "localhost" #os.getenv("RABBITHOST")
 RABBITPORT = "30100" #os.getenv("RABBITPORT")
 RABBITUSER = "user" #os.getenv("RABBITUSER")
-RABBITPASS = "Aql2pHggW47VY67N" #os.getenv("RABBITPASS")
+RABBITPASS = "KzJwjgdHFZV2p5CY" #os.getenv("RABBITPASS")
 RABBITCONSUMEQUEUE = "details-downloader" #os.getenv("RABBITQUEUENAME")
 
 elasticClient = Elasticsearch(

@@ -11,6 +11,8 @@ RUN ./mariadb_repo_setup \
 
 RUN apt-get install -y libmariadb3 libmariadb-dev
 
+RUN ln -sf /usr/share/zoneinfo/America/Costa_Rica /etc/localtime
+
 WORKDIR /app
 
 COPY app/requirements.txt .
