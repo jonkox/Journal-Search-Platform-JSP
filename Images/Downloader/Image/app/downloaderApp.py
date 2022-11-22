@@ -4,25 +4,24 @@ import elastic_transport
 import mariadb
 import datetime
 import json
-import logging
 import os
 
 from elasticsearch import Elasticsearch
 from prometheus_client import Gauge, start_http_server
-from time import sleep, time
+from time import time
 from urllib.request import urlopen
 
 # ------------- Used for testing without environment variables -----------
 # ELASTICHOST = "http://localhost"
 # ELASTICPORT = "32500"
 # ELASTICUSER = "elastic" 
-# ELASTICPASS = "m2Hl6qYVLMNFDfdZ" 
+# ELASTICPASS = "Ogi0LyLHE9SgXwzp" 
 # ELASTICINDEX = "groups"
 
 # RABBITHOST = 'localhost'
 # RABBITPORT = '30100'
 # RABBITUSER = 'user'
-# RABBITPASS = 'iX4rMustwltDPp7Y'
+# RABBITPASS = 'C12zaCZPRM1FCGpD'
 # RABBITQUEUENAMEINPUT = 'loader'
 # RABBITQUEUENAMEOUTPUT ='downloader'
 
@@ -30,8 +29,11 @@ from urllib.request import urlopen
 # MARIADBHOST = "localhost"
 # MARIADBPORT = 32100
 # MARIADBUSER = "root"
-# MARIADBPASS = "9xyqnMJvfy"
+# MARIADBPASS = "mzx1nljUaW"
 
+# COMPONENT = 'downloader'
+
+# URL = "https://api.biorxiv.org/covid19/"
 
 # ------------ ENVIRONMENT  VARIABLES FOR CONNECTIONS -------
 
@@ -57,6 +59,9 @@ MARIADBPORT = os.getenv("MARIADBPORT")
 MARIADBUSER = os.getenv("MARIADBUSER")
 MARIADBPASS = os.getenv("MARIADBPASS")
 
+COMPONENT = os.getenv("HOSTNAME")
+
+URL = os.getenv("APIBIORVIXURL")
 
 # Class for printing colors
 class bcolors:
@@ -75,31 +80,28 @@ class Downloader:
     avgProcessingTime = None
     startingTime = None
     
-    processedGroups_offset = 1
+    processedGroups_offset = 0
 
     ESConnection = None
     MariaClient = None
     mariadbCursor = None
 
-    url = "https://api.biorxiv.org/covid19/0"   # ---------- CAMBIAR LUEGO -------------
-    #url = os.getenv("API_BIORVIX_URL")
-
-    grp_id = None
+    grp_number = None
     id_job = None
 
     #Constructor method
     def __init__(self):
         # Initialize variables for metrics
         self.totalProcessingTime = Gauge(
-            'espublisher_total_processing_time', 
+            'downloader_total_processing_time', 
             'Total amount of time elapsed when processing')
         
         self.avgProcessingTime = Gauge(
-            'espublisher_avg_processing_time', 
+            'downloader_avg_processing_time', 
             'Average amount of time elapsed when processing')
 
         self.numberOfProcessedGroups = Gauge(
-            'espublisher_number_processed_groups', 
+            'downloader_number_processed_groups', 
             'Number of groups process by downloader')
         
         self.amountDownloadedDocuments = Gauge(
@@ -151,6 +153,7 @@ class Downloader:
                     pHost+":"+pPort,
                     basic_auth=(pUser,pPass)
                 )
+
         except elastic_transport.ConnectionError:
             raise Exception ("Error: Couldn't connect to ElasticSearch")
 
@@ -165,8 +168,10 @@ class Downloader:
                     user=pUser, 
                     password= pPass, 
                     database= pName)
-            # Get Cursor
+            # Get Cursor and set to Costa Rica's timezone
             self.mariadbCursor = self.MariaClient.cursor(prepared = True)
+            self.mariadbCursor.execute("SET time_zone = '-6:00'")
+            self.MariaClient.commit()
 
         except:
             print("Error: Couldn't connect to MariaDB") 
@@ -177,13 +182,15 @@ class Downloader:
     def updateGrpTable(self):
         # Update group's stage
        
-        update_query = """UPDATE grupos set stage = 'downloader' where id = %s"""
-        self.mariadbCursor.execute(update_query, (self.grp_id,))
+        update_query = """UPDATE grupos set stage = 'downloader' where grp_number = %s"""
+        self.mariadbCursor = self.MariaClient.cursor(prepared = True)
+        self.mariadbCursor.execute(update_query, (self.grp_number,))
         self.MariaClient.commit()
 
         # Update group's status
-        update_query = """UPDATE grupos set status = 'in-progress' where id = %s"""
-        self.mariadbCursor.execute(update_query, (self.grp_id,))
+        update_query = """UPDATE grupos set status = 'in-progress' where grp_number = %s"""
+        self.mariadbCursor = self.MariaClient.cursor(prepared = True)
+        self.mariadbCursor.execute(update_query, (self.grp_number,))
         self.MariaClient.commit()
     
     #-----------------------------------------------------------------------         
@@ -211,12 +218,10 @@ class Downloader:
         status = 'in-progress'
 
         # Get id which is a foreign key from group table
-        grp_id_query = """SELECT id from grupos WHERE id = %s"""
+        grp_id_query = """SELECT id from grupos WHERE grp_number = %s"""
         self.mariadbCursor = self.MariaClient.cursor(prepared = True)
-        self.mariadbCursor.execute(grp_id_query, (self.grp_id,))
+        self.mariadbCursor.execute(grp_id_query, (self.grp_number,))
         grp_id = int(self.mariadbCursor.fetchone()[0])
-
-        component = 'downloader' # os.env("HOSTNAME")
 
         # Get created datetime 
         current_datetime = datetime.datetime.now()
@@ -224,17 +229,20 @@ class Downloader:
 
         # Insert data into History table
         insert_query = """INSERT INTO history (component,status,created,grp_id,stage) VALUES (%s,%s,%s,%s,%s)"""
-        values = (component, status ,current_datetime_str, grp_id, stage)
+        values = (COMPONENT, status ,current_datetime_str, grp_id, stage)
+        
         self.mariadbCursor = self.MariaClient.cursor(prepared = True)
         self.mariadbCursor.execute(insert_query,values)
         self.MariaClient.commit()
     
     #-----------------------------------------------------------------------         
-    # Function that downloads and publishes to ES the documents from group
+    # Function that returns 30 documents from given start
     #----------------------------------------------------------------------- 
-    def publishDocs(self):
+    def get30Docs(self, start):
+        new_url = URL + str(start)
+       
         # Get response from bioRxiv API
-        urlResult = urlopen(self.url)
+        urlResult = urlopen(new_url)
 
         # Get JSON with API response
         data_json = json.loads(urlResult.read())
@@ -242,30 +250,67 @@ class Downloader:
         # Get all documents from API
         collection = data_json["collection"]
 
+        return collection
+    
+    #-----------------------------------------------------------------------         
+    # Function that downloads and publishes to ES the documents from group
+    #----------------------------------------------------------------------- 
+    def publishDocs(self):
         # Get group size 
         grp_size_query = """SELECT grp_size from jobs WHERE id = %s"""
         self.mariadbCursor = self.MariaClient.cursor(prepared = True)
         self.mariadbCursor.execute(grp_size_query, (self.id_job,))
         grp_size = int(self.mariadbCursor.fetchone()[0])
 
-        previous_job_id = self.processedGroups_offset - 1
         docs = []
+        self.processedGroups_offset = int(self.grp_number)
 
-        for i in range (previous_job_id * grp_size, self.processedGroups_offset * grp_size):
-            docs.append(collection[i])
+        if grp_size <= 30:
+            start = self.processedGroups_offset * grp_size
+            collection = self.get30Docs(start)
+            
+            for i in range (0, grp_size):
+                docs.append(collection[i])
+        else:
+            iter = 0
+            batches = grp_size // 30
+            extraBatch = int(((grp_size/30) % 1) * 30)
 
-        for doc in docs:
-            publishingResult = self.ElasticClient.index(
-            index = ELASTICINDEX,
-            document = doc,
-        )
+            # Get docs from complete groups of 30
+            while iter < batches:
+                start = (self.processedGroups_offset * grp_size) + (30 * iter)
+                collection = self.get30Docs(start)
 
+                for i in range (0, 30):
+                    docs.append(collection[i])
+
+                iter += 1
+                
+            # Get docs from remaining amount smaller than 30
+            start = (self.processedGroups_offset * grp_size) + (30 * iter)
+            collection = self.get30Docs(start) 
+
+            for i in range (0, extraBatch):
+                docs.append(collection[i])
+
+        doc = {
+            "id_job": str(self.id_job),
+            "grp_number": str(self.grp_number),
+            "docs": docs
+        }
+
+        message_json = json.dumps(doc)
+     
+        self.ElasticClient.options(request_timeout=60).index(index=ELASTICINDEX,
+                                                            document=message_json,
+                                                            refresh='wait_for')
+        
         self.downloadedDocs += grp_size
 
     #-----------------------------------------------------------------------         
     # Function that updates record from history
     #----------------------------------------------------------------------- 
-    def updateHistoryTable(self, grp_id, status, message):
+    def updateHistoryTable(self, status, message):
         """
         Following data to update:
         status: completed/error
@@ -274,13 +319,12 @@ class Downloader:
         """
         history_id_query = """SELECT id from history WHERE grp_id = %s"""
         self.mariadbCursor = self.MariaClient.cursor(prepared = True)
-        self.mariadbCursor.execute(history_id_query, (self.grp_id,))
+        self.mariadbCursor.execute(history_id_query, (self.grp_number,))
         history_id = int(self.mariadbCursor.fetchone()[0])
         
         update_history_query1 = """UPDATE history SET status = %s WHERE id = %s"""
         self.mariadbCursor = self.MariaClient.cursor(prepared = True)
         self.mariadbCursor.execute(update_history_query1, (status,history_id,))
-        self.MariaClient.commit()
 
         # Get end datetime 
         current_datetime = datetime.datetime.now()
@@ -305,12 +349,10 @@ class Downloader:
         self.startingTime = time()
 
         # Get job_id from the document that was received
-        # self.id_job = int(jsonObject["id_job"])
         self.id_job = jsonObject["id_job"]
 
         # Get group_id from the document that was received
-        # self.grp_id = int(jsonObject["grp_number"])
-        self.grp_id = jsonObject["grp_number"]
+        self.grp_number = jsonObject["grp_number"]
 
         # -------- Update group table ---------------
         self.updateGrpTable()
@@ -322,7 +364,7 @@ class Downloader:
 
         # -------- Download and publish documents ---------------
         self.publishDocs()
-        self.processedGroups_offset += 1
+    
         print(f"{bcolors.OK} Downloader: {bcolors.RESET} Published documents")
 
     #-----------------------------------------------------------------------         
@@ -348,7 +390,7 @@ class Downloader:
 
         message = {
             "id_job": str(self.id_job),
-            "grp_number": str(self.grp_id)
+            "grp_number": str(self.grp_number)
         }
 
         message_json = json.dumps(message)
@@ -371,18 +413,17 @@ class Downloader:
     def callback(self, ch, method, properties, body):
         print(f"{bcolors.OK} Downloader: {bcolors.RESET} Message was received")
         json_object = json.loads(body)
-        print(json_object)
         
         try:
             self.workForPod(json_object)
             
             # If work was successful then update history table
-            self.updateHistoryTable(self.grp_id, 'completed', "")
+            self.updateHistoryTable('completed', "")
 
             # Update group status
-            update_group_query = """UPDATE grupos SET status = %s WHERE id = %s"""
+            update_group_query = """UPDATE grupos SET status = %s WHERE grp_number = %s"""
             self.mariadbCursor = self.MariaClient.cursor(prepared = True)
-            self.mariadbCursor.execute(update_group_query, ('completed',self.grp_id,))
+            self.mariadbCursor.execute(update_group_query, ('completed',self.grp_number,))
             self.MariaClient.commit()
 
             # Send message to output queue for next component
@@ -398,12 +439,12 @@ class Downloader:
         
         except Exception as error:
             # If work was unsuccessful then update history table with error message
-            self.updateHistoryTable(self.grp_id, 'error', str(error))
+            self.updateHistoryTable('error', str(error))
 
             # Update group status
-            update_group_query = """UPDATE grupos SET status = %s WHERE id = %s"""
+            update_group_query = """UPDATE grupos SET status = %s WHERE grp_number = %s"""
             self.mariadbCursor = self.MariaClient.cursor(prepared = True)
-            self.mariadbCursor.execute(update_group_query, ('completed',self.grp_id,))
+            self.mariadbCursor.execute(update_group_query, ('completed',self.grp_number,))
             self.MariaClient.commit()
 
             print(f"{bcolors.FAIL} Downloader: {bcolors.RESET} Failed to download group")

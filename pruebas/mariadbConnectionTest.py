@@ -1,10 +1,11 @@
 import mariadb
+import datetime
 
 MARIADBNAME = "my_database"
 MARIADBHOST = "localhost"
 MARIADBPORT = 32100
 MARIADBUSER = "root"
-MARIADBPASS = "9xyqnMJvfy"
+MARIADBPASS = "mzx1nljUaW"
 
 """
 # MariaDB
@@ -23,6 +24,17 @@ try:
         password= MARIADBPASS, 
         database= MARIADBNAME)
     # Get Cursor
-    mariadbCursor = mariaClient.cursor()
+    mariadbCursor = mariaClient.cursor(prepared = True)
+    mariadbCursor.execute("SET GLOBAL time_zone = '-6:00'")
+    mariaClient.commit()
+
+    current_datetime = datetime.datetime.now()
+    current_datetime_str = current_datetime.strftime('%Y-%m-%d %H:%M:%S')
+
+    insert_query = """INSERT INTO fechas (fecha) VALUES (%s)"""
+    mariadbCursor = mariaClient.cursor(prepared = True)
+    mariadbCursor.execute(insert_query,(current_datetime_str,))
+    mariaClient.commit()
+
 except:
     print("Error: Couldn't connect to MariaDB") 
