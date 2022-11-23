@@ -2,3 +2,4 @@ pika
 mariadb
 elasticsearch
 prometheus-client
+requests

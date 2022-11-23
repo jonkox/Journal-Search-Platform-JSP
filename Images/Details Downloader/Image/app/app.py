@@ -10,6 +10,7 @@ import pika
 import os
 import time
 import requests
+'''
 # RabbitMQ
 RABBITHOST = os.getenv("RABBITHOST")
 RABBITPORT = os.getenv("RABBITPORT")
@@ -35,6 +36,33 @@ MARIADBPASS = os.getenv("MARIADBPASS")
 SQLPROCESSORRETRIES = os.getenv("SQLPROCESSORRETRIES")
 SQLPROCESSORTIMEOUT= os.getenv("SQLPROCESSORTIMEOUT")
 
+'''
+#Test values
+# RabbitMQ
+RABBITHOST = "databases-rabbitmq"
+RABBITPORT = 5672
+RABBITUSER = "user"
+RABBITPASS = "password"
+RABBITCONSUMEQUEUE = "details-downloader"
+RABBITPUBLISHQUEUE = "publish-queue"
+
+# Elastic
+ELASTICHOST = "http://databases-elasticsearch.default.svc.cluster.local"
+ELASTICPORT = 9200
+ELASTICUSER = "elastic"
+ELASTICPASS = "password"
+
+# MariaDB
+MARIADBNAME = "my_database"
+MARIADBHOST = "databases-mariadb-primary"
+MARIADBPORT = 3306
+MARIADBUSER = "root"
+MARIADBPASS = "YES"
+
+#SQLProcessor
+SQLPROCESSORRETRIES = 5
+SQLPROCESSORTIMEOUT= 10
+
 # Enum for colors
 class bcolors:
     PROCESSING  = '\33[96m'     #CYAN
@@ -46,7 +74,6 @@ class bcolors:
 
 #Class containing the program's logic
 class DetailsDownloader:
-    #TODO: Preguntar qué es esto 
     __consumerQueue = None
     __publishQueue = None
     __elasticClient = None
@@ -192,8 +219,6 @@ class DetailsDownloader:
             )
             return True
         return False
-    
-    #TODO: corregir error
     #This method sets the status of the process to finished in mariaDB
     def endInMariaDB(self, message):
         id_job = message["id_job"]
@@ -214,8 +239,8 @@ class DetailsDownloader:
             return True
         return False
 
-    #TODO: corregir error y revisar que los nombres de los fields del query estén bien
-    #TODO: preguntar que es SQLPROCESSORTIMEOUT
+    #TODO: revisar que los nombres de los fields del query estén bien
+    #TODO: preguntar para que sirve SQLPROCESSORTIMEOUT
     #TODO: preguntar si el url de medrxiv se pasa por environment variables
     # This method retrieves the group document from elastic with the
     # recieved id_job and grp_number of the queue
@@ -246,7 +271,7 @@ class DetailsDownloader:
         return False
     
     #This method adds the details retrieved from the api to each document in elasticsearch
-    #TODO: fetch details from api
+    #TODO: pass url through env variables
     def addDetails(self, message):
         docs = self.__currentDoc["docs"]
         detailsUrl = "https://api.biorxiv.org/details/medrxiv/"
@@ -267,27 +292,10 @@ class DetailsDownloader:
         self.__currentDoc["docs"] = docs
         self.__elasticClient.index(index="groups",id=self.__currentDocId,document=self.__currentDoc)
         return False
+    
+    def startProcess(self):
+        start_http_server(6941)
+        self.__consumerQueue.start_consuming()
 
-    # Method to initialize consuming queue and the publishing queue
-    def initQueues(self):
-        rabbitUserPass = pika.PlainCredentials(RABBITUSER,RABBITPASS)
-        rabbitParameters = pika.ConnectionParameters(
-            heartbeat=120,
-            blocked_connection_timeout=120,
-            host=RABBITHOST,
-            port=RABBITPORT,
-            credentials=rabbitUserPass
-        )
-        try:
-            self.__consumerQueue = pika.BlockingConnection(rabbitParameters).channel()
-            self.__publishQueue = pika.BlockingConnection(rabbitParameters).channel()
-            self.__consumerQueue.basic_qos(prefetch_count=1)
-        except pika.exceptions.AMQPConnectionError:
-            # We can't continue without a queue to get data from 
-            # and to publish our results
-            raise Exception("Error: Couldn't connect to RabbitMQ")
-        self.__consumerQueue.queue_declare(queue=RABBITCONSUMEQUEUE)
-        self.__publishQueue.queue_declare(queue=RABBITPUBLISHQUEUE)
-
-        self.__consumerQueue.basic_consume(queue=RABBITCONSUMEQUEUE, on_message_callback=self.consume, auto_ack=False)
-
+downloader = DetailsDownloader()
+downloader.startProcess()
