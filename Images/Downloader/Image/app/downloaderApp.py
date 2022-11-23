@@ -182,13 +182,13 @@ class Downloader:
     def updateGrpTable(self):
         # Update group's stage
        
-        update_query = """UPDATE grupos set stage = 'downloader' where grp_number = %s"""
+        update_query = """UPDATE groups set stage = 'downloader' where grp_number = %s"""
         self.mariadbCursor = self.MariaClient.cursor(prepared = True)
         self.mariadbCursor.execute(update_query, (self.grp_number,))
         self.MariaClient.commit()
 
         # Update group's status
-        update_query = """UPDATE grupos set status = 'in-progress' where grp_number = %s"""
+        update_query = """UPDATE groups set status = 'in-progress' where grp_number = %s"""
         self.mariadbCursor = self.MariaClient.cursor(prepared = True)
         self.mariadbCursor.execute(update_query, (self.grp_number,))
         self.MariaClient.commit()
@@ -207,7 +207,7 @@ class Downloader:
                 end DATETIME DEFAULT NULL,
                 message TEXT DEFAULT NULL,
                 stage VARCHAR(45),
-                grp_id INT REFERENCES grupos(id)
+                grp_id INT REFERENCES groups(id)
             )
         """
         self.mariadbCursor = self.MariaClient.cursor(prepared = True)
@@ -218,7 +218,7 @@ class Downloader:
         status = 'in-progress'
 
         # Get id which is a foreign key from group table
-        grp_id_query = """SELECT id from grupos WHERE grp_number = %s"""
+        grp_id_query = """SELECT id from groups WHERE grp_number = %s"""
         self.mariadbCursor = self.MariaClient.cursor(prepared = True)
         self.mariadbCursor.execute(grp_id_query, (self.grp_number,))
         grp_id = int(self.mariadbCursor.fetchone()[0])
@@ -421,7 +421,7 @@ class Downloader:
             self.updateHistoryTable('completed', "")
 
             # Update group status
-            update_group_query = """UPDATE grupos SET status = %s WHERE grp_number = %s"""
+            update_group_query = """UPDATE groups SET status = %s WHERE grp_number = %s"""
             self.mariadbCursor = self.MariaClient.cursor(prepared = True)
             self.mariadbCursor.execute(update_group_query, ('completed',self.grp_number,))
             self.MariaClient.commit()
@@ -442,7 +442,7 @@ class Downloader:
             self.updateHistoryTable('error', str(error))
 
             # Update group status
-            update_group_query = """UPDATE grupos SET status = %s WHERE grp_number = %s"""
+            update_group_query = """UPDATE groups SET status = %s WHERE grp_number = %s"""
             self.mariadbCursor = self.MariaClient.cursor(prepared = True)
             self.mariadbCursor.execute(update_group_query, ('completed',self.grp_number,))
             self.MariaClient.commit()
