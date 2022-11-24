@@ -14,7 +14,7 @@ ELASTICHOST = os.getenv("ELASTICHOST")
 ELASTICPORT = os.getenv("ELASTICPORT")
 ELASTICUSER = os.getenv("ELASTICUSER")
 ELASTICPASS = os.getenv("ELASTICPASS")
-ELASTICINSEX = os.getenv("ELASTICINSEX")
+ELASTICINDEX = os.getenv("ELASTICINDEX")
 
 #MariaDB
 MARIADBNAME = os.getenv("MARIADBNAME")
@@ -80,7 +80,7 @@ def insertar():
   #Configurar el indice de Elastic
   mapping = {"mappings": {"properties": {"rel_date": {"type": "text"}}}} 
   try:
-      ElasticClient.indices.create(index=ELASTICINSEX, body=mapping)
+      ElasticClient.indices.create(index=ELASTICINDEX, body=mapping)
   except:
       print("")
   try:
@@ -110,7 +110,7 @@ def buscar():
   lista = []
   docu = {}
   try:
-    respuesta = ElasticClient.search(index=ELASTICINSEX, query={"multi_match" : {"query":query, "fields": 
+    respuesta = ElasticClient.search(index=ELASTICINDEX, query={"multi_match" : {"query":query, "fields": 
     ["rel_date","rel_title","rel_site","rel_abs","rel_authors.author_name","rel_authors.author_inst",
     "license","type","category","details.jatsxml"]}},size = 100)
     cantidad = respuesta['hits']['total']['value']
