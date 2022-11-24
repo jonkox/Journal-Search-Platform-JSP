@@ -21,7 +21,7 @@ spec:
         ports:
           - containerPort: 5000
         env:
-        - name: "ELASTICINSEX"
+        - name: "ELASTICINDEX"
           value: {{ .Values.general.elasticindex }}
         - name: "ELASTICHOST"
           value: {{ .Values.general.elastichost }}
