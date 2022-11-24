@@ -9,4 +9,4 @@ spec:
     app: loader
   ports:
   - name: metrics
-    port: {{.Values.loader.portserver}}
+    port: {{.Values.loader.metrics}}

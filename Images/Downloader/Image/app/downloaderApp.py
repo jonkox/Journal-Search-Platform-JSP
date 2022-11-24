@@ -42,7 +42,7 @@ ELASTICHOST = os.getenv("ELASTICHOST")
 ELASTICPORT = os.getenv("ELASTICPORT")
 ELASTICUSER = os.getenv("ELASTICUSER")
 ELASTICPASS = os.getenv("ELASTICPASS")
-ELASTICINDEX = os.getenv("ELASTICINDEX")
+ELASTICINDEX = "groups"
 
 # RabbitMQ
 RABBITHOST = os.getenv("RABBITHOST")
@@ -62,6 +62,8 @@ MARIADBPASS = os.getenv("MARIADBPASS")
 COMPONENT = os.getenv("HOSTNAME")
 
 URL = os.getenv("APIBIORVIXURL")
+
+METRICSPORT = os.getenv("METRICSPORT")
 
 # Class for printing colors
 class bcolors:
@@ -91,6 +93,7 @@ class Downloader:
 
     #Constructor method
     def __init__(self):
+        URL += "covid19/"
         # Initialize variables for metrics
         self.totalProcessingTime = Gauge(
             'downloader_total_processing_time', 
@@ -114,7 +117,7 @@ class Downloader:
         self.amountDownloadedDocuments.set(0)
 
         # #Starting server where we send metrics
-        start_http_server(6944)
+        start_http_server(int(METRICSPORT))
 
         self.connectElastic(ELASTICHOST,ELASTICPORT,ELASTICUSER,ELASTICPASS)
         self.connectDbMaria(MARIADBHOST,MARIADBPORT,MARIADBUSER,MARIADBPASS,MARIADBNAME) 

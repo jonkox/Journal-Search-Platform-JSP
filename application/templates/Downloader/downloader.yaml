@@ -17,6 +17,9 @@ spec:
       containers:
       - name: downloader
         image: ihuskyx/downloader
+        ports:
+          - name: metrics
+            containerPort: {{ .Values.downloader.metrics }}
         env:
           - name: "ELASTICHOST"
             value: {{ .Values.general.elastichost }}
@@ -45,9 +48,9 @@ spec:
                 key: rabbitmq-password
                 optional: false
           - name: "RABBITQUEUENAMEINPUT"
-            value: {{ .Values.downloader.rabbitqueuenameinput }}
+            value: {{ .Values.loader.queuename }}
           - name: "RABBITQUEUENAMEOUTPUT"
-            value: {{ .Values.downloader.rabbitqueuenameoutput }}
+            value: {{ .Values.downloader.queuename }}
           - name: "MARIADBNAME"
             value: {{ .Values.general.mariadbname }}
           - name: "MARIADBHOST"
@@ -63,4 +66,6 @@ spec:
                 key: mariadb-root-password
                 optional: false
           - name: "APIBIORVIXURL"
-            value: {{ .Values.general.api_bioXriv_url }}
+            value: {{ .Values.general.apiurl }}
+          - name: "METRICSPORT"
+            value: {{ .Values.downloader.metrics }}

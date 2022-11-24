@@ -69,7 +69,7 @@ class Loader:
     
     #Constructor method
     def __init__(self):
-
+        APIBIORXIV += "covid19/0"
         #Starting server where we send metrics
         start_http_server(int(PORTSERVER))
 

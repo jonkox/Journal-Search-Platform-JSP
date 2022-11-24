@@ -19,7 +19,7 @@ spec:
         image: jonkox/loader
         ports:
           - name: metrics
-            containerPort: {{.Values.loader.portserver}}
+            containerPort: {{.Values.loader.metrics}}
         env:
           - name: "RABBITHOST"
             value: {{ .Values.general.rabbithost }}
@@ -34,9 +34,7 @@ spec:
                 key: rabbitmq-password
                 optional: false
           - name: "RABBITDEST"
-            value: {{ .Values.loader.destqueue }}
-
-
+            value: {{ .Values.loader.queuename }}
           - name: "MARIADBNAME"
             value: {{ .Values.general.mariadbname }}
           - name: "MARIADBHOST"
@@ -51,11 +49,9 @@ spec:
                 name: databases-mariadb
                 key: mariadb-root-password
                 optional: false
-
-
           - name: "APIBIORXIV"
-            value: {{.Values.loader.apibiorxiv}}
+            value: {{.Values.general.apiurl}}
           - name: "SLEEPTIME"
             value: {{.Values.loader.sleeptime | quote}}
           - name: "PORTSERVER"
-            value: {{.Values.loader.portserver | quote}}
+            value: {{.Values.loader.metrics | quote}}

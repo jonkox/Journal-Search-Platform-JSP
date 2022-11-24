@@ -9,4 +9,4 @@ spec:
     app: downloader
   ports:
   - name: metrics
-    port: 6944
+    port: {{ .Values.downloader.metrics }}
