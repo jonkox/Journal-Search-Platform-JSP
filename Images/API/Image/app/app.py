@@ -58,6 +58,7 @@ CORS(api)
 fb = pyrebase.initialize_app(configuration)
 base = fb.database()
 
+lista2 = []
 #Información para las métricas
 NumeroDeRequests = Counter('Requests','API Numero de requests')
 NumeroDeErrores = Counter('Errores', 'API Numero de errores en las llamadas')
@@ -117,8 +118,8 @@ def buscar():
   NumeroDeRequests.inc()
   datos = request.get_json()
   query = datos["consulta"]
-  lista = []
   docu = {}
+  lista = []
   try:
     respuesta = ElasticClient.search(index=ELASTICINDEX, query={"multi_match" : {"query":query, "fields": 
     ["rel_date","rel_title","rel_site","rel_abs","rel_authors.author_name","rel_authors.author_inst",
@@ -130,9 +131,9 @@ def buscar():
       NumeroDeDocumentos.inc(cantidad)
     base.child("articulos").remove()
     for j in respuesta['hits']['hits']:
-      lista.append(j["_source"]) 
+      lista.append(j["_source"])
       docu = {"titulo":j["_source"]["rel_title"],"autores":j["_source"]["rel_authors"], "abstract": j["_source"]["rel_abs"]}
-      base.child("articulos").push(docu)
+      lista2.append(docu)
   except:
     NumeroDeErrores.inc()
   return lista
@@ -147,14 +148,15 @@ def detalles():
   titulo = datos["titulo"]
   tipo = datos["tipo"]
   try:
-    uidArticulo = list(base.child("articulos").order_by_child("titulo").equal_to(titulo).get().val().keys())[0]
     if tipo == "abstract":
-      abstract = base.child("articulos").child(uidArticulo).child("abstract").get().val()
-      print(abstract)
-      return abstract
+      for j in lista2:
+        if j["titulo"]== titulo:
+          return j["abstract"]
     else:
-      listaAutores = base.child("articulos").child(uidArticulo).child("autores").get().val()
-      return listaAutores
+        for j in lista2:
+          if j["titulo"]== titulo:
+            listaAutores = j["autores"]
+            return listaAutores
   except:
     NumeroDeErrores.inc()
   return "Error"
