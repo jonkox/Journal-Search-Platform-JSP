@@ -10,6 +10,7 @@ RUN ./mariadb_repo_setup \
     --mariadb-server-version="mariadb-10.9.4"
 
 RUN apt-get install -y libmariadb3 libmariadb-dev
+RUN ln -sf /usr/share/zoneinfo/America/Costa_Rica /etc/localtime
 
 WORKDIR /app
 

@@ -12,19 +12,23 @@ MARIADBUSER = "root"
 MARIADBPASS = "3VopN5R26q"
 
 def connectMariaDB():
-        #Connect to mariadb
-        try:
-            conn = mariadb.connect(
-                user=MARIADBUSER,
-                password=MARIADBPASS,
-                host=MARIADBHOST,
-                port=MARIADBPORT,
-                database=MARIADBNAME)
-            cur = conn.cursor()
-            print("Connection succesfully")
-        except mariadb.Error as e:
-            print(f"Error connecting to MariaDB Platform: {e}")
+    val = False
 
+    
+    #Connect to mariadb
+    try:
+        conn = mariadb.connect(
+            user=MARIADBUSER,
+            password=MARIADBPASS,
+            host=MARIADBHOST,
+            port=MARIADBPORT,
+            database=MARIADBNAME)
+        cur = conn.cursor()
+        print("Connection succesfully")
+    except mariadb.Error as e:
+        print(f"Error connecting to MariaDB Platform: {e}")
+
+    if val:
         jobsTable = "CREATE TABLE IF NOT EXISTS jobs ( \
                             id INT NOT NULL AUTO_INCREMENT, \
                             created DATETIME, \
@@ -53,9 +57,16 @@ def connectMariaDB():
         cur.execute(groupsTable)
         conn.commit()
 
+
         for i in range(200):
             print("INSERTANDO JOBS")
-            cur.execute(f"insert INTO my_database.jobs(created,status,end,loader,grp_size) values(now(),'NEW',null,'PUM',{str(random.randint(10,2000))})")
+            cur.execute(f"insert INTO my_database.jobs(created,status,end,loader,grp_size) values(now(),'NEW',null,null,{str(random.randint(10,2000))})")
         conn.commit()
+    
+    if not val:
+        cur.execute("select * from jobs")
+        s = cur.fetchall()
+        print(s)
+
 
 connectMariaDB()

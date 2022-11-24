@@ -1,6 +1,6 @@
 from    datetime            import      datetime
 from    time                import      sleep,      time
-from    prometheus_client   import      Counter,    Summary,    start_http_server
+from    prometheus_client   import      Counter,    Summary,    start_http_server, Gauge
 
 import  os
 import  json
@@ -47,28 +47,25 @@ PORTSERVER              =   os.getenv("PORTSERVER")
 
 #This class was taken on: https://www.delftstack.com/es/howto/python/python-print-colored-text/ 
 class bcolors:
-    OK                  =   '\033[92m'    #GREEN
-    WARNING             =   '\033[93m'    #YELLOW
-    FAIL                =   '\033[91m'    #RED
-    RESET               =   '\033[0m'     #RESET COLOR
+    OK                  =   '\033[92m'      #GREEN
+    WARNING             =   '\033[93m'      #YELLOW
+    FAIL                =   '\033[91m'      #RED
+    RESET               =   '\033[0m'       #RESET COLOR
 
 
 
 class Loader:
 
-    CONN                =   None    #MariaDB connection
-    CUR                 =   None    #MariaDB cursor
-    MSG                 =   None    #Message that will be publish on queue
-    PUBLISHQUEUE        =   None    #Queue where the application needs to consume
-    AVGTIME             =   None    #Average time process per group
-    PROCESSEDGROUPS     =   None    #Total quantity of groups has been processed
-    ERRORS              =   None    #Quantity of errors that has been ocur
-    JOBSDONE            =   None    #Quantity of jobs that has been processed
-    STMT                =   "SELECT id,created,status,end,loader,grp_size FROM jobs WHERE status = 'new' LIMIT 1"
-    AVGTIME             =   Summary(
-                            'loader_avg_processing_time', 
-                            'Average amount of time elapsed when processing')
-    TOTALMESSAGES       =   0
+    CONN                =   None            #MariaDB connection
+    CUR                 =   None            #MariaDB cursor
+    MSG                 =   None            #Message that will be publish on queue
+    PUBLISHQUEUE        =   None            #Queue where the application needs to consume
+    AVGTIME             =   None            #Average time process per group
+    PROCESSEDGROUPS     =   None            #Total quantity of groups has been processed
+    ERRORS              =   None            #Quantity of errors that has been ocur
+    JOBSDONE            =   None            #Quantity of jobs that has been processed
+    GROUPTIME           =   None            #Time took from the processing of the group
+    TOTALMESSAGES       =   None            #Quantity of document's total from the API
     
     #Constructor method
     def __init__(self):
@@ -131,48 +128,12 @@ class Loader:
                             FOREIGN KEY (id_job) REFERENCES jobs (id) \
                         )"
 
-
-        storeProcedure = """CREATE PROCEDURE get_new_job(IN len INT, IN grps INT, IN pod varchar(50))
-                                begin
-                                    declare vID int;
-                                    declare job_exists bool;
-                                    DECLARE control INT default 0;
-                                    DECLARE offsetAux INT default 0;
-                                    DECLARE ofst INT default 0;
-                                    
-                                    
-                                    if (select count(*) from jobs where jobs.status = 'new' limit len) >= 1 THEN
-                                        START TRANSACTION;
-                                        
-                                        select id into vID from jobs where jobs.status = 'new' limit len;
-                                        select grp_size into ofst from jobs where jobs.id = vID;
-                                        set grps = floor(grps/ofst)+1;
-
-                                        while control < grps DO
-                                            INSERT INTO my_database.groups(id_job,created,end,stage,grp_number,status,`offset`) VALUES (vID,now(),null,'Loader',control,null,offsetAux);
-                                            SET control = control + 1;
-                                            set offsetAux = offsetAux + ofst;
-                                        end while;
-
-                                        UPDATE jobs SET status = 'IN PROGRESS' WHERE id = vID;
-                                        UPDATE jobs SET loader = pod WHERE id = vID;
-                                        select count(*) from my_database.groups where id_job = vID
-                                        UNION
-                                        select id from my_database.jobs where id = vID;
-                                        commit;
-                                    END IF;
-                                end"""
-
-
-        
         self.CUR.execute(jobsTable)
         self.CUR.execute(groupsTable)
-        self.CUR.execute("DROP PROCEDURE if exists get_new_job")
-        self.CUR.execute(storeProcedure)
 
         self.CONN.commit()
 
-    #Initialize metric values
+    #Initialize metrics values
     def initMetrics(self):
         self.PROCESSEDGROUPS = Counter(
             'loader_number_processed_groups', 
@@ -188,6 +149,12 @@ class Loader:
             'loader_number_processed_jobs', 
             'Number of Jobs processed by LOADER'
         )
+        self.GROUPTIME = Gauge(
+            'loader_time_of_processed_group', 
+            'Time of the latest group processed by LOADER'
+        )
+
+        self.GROUPTIME.set(0)
 
     #Reconnect to the queue in case there is any problem
     def reconnectPublishQueue(self):
@@ -228,32 +195,15 @@ class Loader:
 
         return math.ceil(groups)
 
-
-    def job_process(self):
-
-        print(f"{bcolors.OK}Processing: {bcolors.RESET}Start job processing.")
-        self.CUR.callproc('get_new_job',(1,self.TOTALMESSAGES,PODNAME))
-        processedGroups = self.CUR.fetchall()
-        
-        for i in range(int(processedGroups[0][0])):
-            self.MSG = {"id_job":processedGroups[1][0], "grp_number": i}
-            self.produce(self.MSG)
-            self.PROCESSEDGROUPS.inc()
-            print(f"{bcolors.OK}Processing: {bcolors.RESET}Group processed {self.MSG}")
-        
-
     #The main loop, continuously checks for new jobs and processes it
     def transaction(self):
-        self.get_info(11)
         while True:
             try:
                 sleep(int(SLEEPTIME))
                 
-                #Start a transaction
+                #Start processing the job.
                 self.process_job()
-                #self.CONN.commit()
 
-                
             #Error handling
             except mariadb.ProgrammingError as e:
                 print(f"{bcolors.FAIL}ERROR: {bcolors.RESET} {e}")
@@ -266,43 +216,44 @@ class Loader:
             
             for i in range(grps):
                 try:
-                    print(f"INSERT INTO groups(id_job,created,end,stage,grp_number,status,`offset`) \
-                                        VALUES ({str(id)},now(),null,'Loader',{str(i)},null,{str(offset)})")
+                    firstTime = time()                                                              #Take initial time
                     self.CUR.execute(f"INSERT INTO groups(id_job,created,end,stage,grp_number,status,`offset`) \
-                                        VALUES ({str(id)},now(),null,'Loader',{str(i)},null,{str(offset)})")
-                    
+                                        VALUES ({str(id)},now(),null,'Loader',{str(i)},null,{str(offset)})")            #Make the insert
+                    self.CONN.commit()                                                                                  #Commit the changes
                     offset += length
 
+                    #Produce the message to RabbitMQ and send it
                     self.MSG = {"id_job":id, "grp_number": i}
                     self.produce(self.MSG)
-                    self.PROCESSEDGROUPS.inc()
                     
+                    
+                    #Update metrics
+                    self.PROCESSEDGROUPS.inc()
+                    timeTook = time() - firstTime
+                    self.GROUPTIME.set(timeTook)
+
                     print(f"{bcolors.OK}Processing: {bcolors.RESET} Group {self.MSG} has been processed succesfully.")
                 
                 except mariadb.ProgrammingError as e:
                     print(f"{bcolors.FAIL}ERROR: {bcolors.RESET} {e}")
                     self.ERRORS.inc()
-            self.CONN.commit()
 
     #process_job processes a job and creates its respective groups.
-    @AVGTIME.time()
     def process_job(self):
-        #self.CUR.execute(self.STMT)
-        #lis = self.CUR.fetchall()
-
-        s=f"UPDATE jobs SET `status` = 'In-progress', loader='{str(PODNAME)}' ,id=last_insert_id(id) WHERE `status` = 'new' LIMIT 1"
-        self.CUR.execute(s)
+        #This statement takes 1 job to be processed and at the same time updates it.
+        stmt = f"UPDATE jobs SET `status` = 'In-progress', loader='{str(PODNAME)}' ,id=last_insert_id(id) WHERE `status` = 'new' LIMIT 1"
+        self.CUR.execute(stmt)
         self.CONN.commit()
         id_job = self.CUR.lastrowid
         if id_job != None:
             #lis always will have JUST ONE job because the SQL statement is limited by one
             try:
-                self.CUR.execute(f"SELECT grp_size FROM jobs WHERE id = {id_job}")    #Updates the job
-                length = self.CUR.fetchone()[0]                           #takes the group size
-                grps = self.get_info(length)            #return the number of groups we need
-                self.create_groups(length,id_job,grps)    #create the groups
+                self.CUR.execute(f"SELECT grp_size FROM jobs WHERE id = {id_job}")      #Updates the job
+                length = self.CUR.fetchone()[0]                                         #takes the group size
+                grps = self.get_info(length)                                            #return the number of groups we need
+                self.create_groups(length,id_job,grps)                                  #create the groups
 
-                self.JOBSDONE.inc()                         #Icrements the counter
+                self.JOBSDONE.inc()                                                     #Icrements the counter
                 return False
 
             except mariadb.ProgrammingError as e:
