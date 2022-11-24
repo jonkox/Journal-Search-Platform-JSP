@@ -459,7 +459,7 @@ class JatsxmlProcessor:
     # method in charge of processing all docs in a group, including getting the jatsxml, pusblishing to elastic and deleting group
     def processDocs(self):
         for doc in self.__currentGroup["docs"]:
-            if "jatsxml" in doc["details"]:
+            if "details" in doc and "jatsxml" in doc["details"]:
                 doc["details"]["jatsxml"] = self.getJatsxml(doc["details"]["jatsxml"])
                 self.__processedJatsxml.inc()
             else:
