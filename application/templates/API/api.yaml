@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  labels:
+    app: api
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+      - name: api
+        image: pamlez/api
+        imagePullPolicy: Never
+        ports:
+          - name: api-port
+            containerPort: 5000
+          - name: metrics
+            containerPort: {{ .Values.api.metrics }}
+        env:
+        - name: "ELASTICINDEX"
+          value: {{ .Values.general.elasticindex }}
+        - name: "ELASTICHOST"
+          value: {{ .Values.general.elastichost }}
+        - name: "ELASTICPORT"
+          value: {{ .Values.general.elasticport | quote }}
+        - name: "ELASTICUSER"
+          value: {{ .Values.general.elasticuser }}
+        - name: "ELASTICPASS"
+          valueFrom:
+            secretKeyRef:
+              name: databases-elasticsearch
+              key: elasticsearch-password
+              optional: false
+        - name: "MARIADBNAME"
+          value: {{ .Values.general.mariadbname }}
+        - name: "MARIADBHOST"
+          value: {{ .Values.general.mariadbhost }}
+        - name: "MARIADBPORT"
+          value: {{ .Values.general.mariadbport | quote }}
+        - name: "MARIADBUSER"
+          value: {{ .Values.general.mariadbuser }}
+        - name: "MARIADBPASS"
+          valueFrom:
+            secretKeyRef:
+              name: databases-mariadb
+              key: mariadb-root-password
+              optional: false
+        - name: "METRICSPORT"
+            value: {{ .Values.api.metrics | quote }}

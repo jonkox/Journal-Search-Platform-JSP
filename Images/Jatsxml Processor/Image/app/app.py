@@ -118,6 +118,9 @@ class JatsxmlProcessor:
         # Mappings to avoid elasticsearch changing data types
         mappings = {
             "properties": {
+                "rel_date": {
+                    "type": "text"
+                },
                 "details.jatsxml": {
                     "enabled" : False
                 }

@@ -3,9 +3,10 @@ general:
   elastichost: "http://databases-elasticsearch-master-hl.default.svc.cluster.local"
   elasticport: 9200
   elasticuser: "elastic"
+  elasticindex: "registries"
 
   # RabbitMQ
-  rabbithost: "databases-rabbitmq-headless"
+  rabbithost: "monitoring-rabbitmq-headless"
   rabbitport: 5672
   rabbituser: "user"
 
@@ -28,7 +29,6 @@ detailsDownloader:
   metrics: 6947
 
 jatsxml:
-  index: "registries"
   replicas: 24
   metrics: 6948
 
@@ -36,3 +36,16 @@ downloader:
   queuename: "downloader"
   replicas: 3
   metrics: 6944
+
+api:
+  replicas: 1
+  metrics: 6942
+
+
+
+
+
+
+
+
+  

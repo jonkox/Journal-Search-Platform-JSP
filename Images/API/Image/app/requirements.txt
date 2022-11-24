@@ -1,0 +1,6 @@
+prometheus_client
+elasticsearch
+mariadb
+flask
+pyrebase4
+flask_cors

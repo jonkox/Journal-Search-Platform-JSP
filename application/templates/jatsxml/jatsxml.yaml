@@ -28,7 +28,7 @@ spec:
           - name: "ELASTICUSER"
             value: {{ .Values.general.elasticuser }}
           - name: "ELASTICINDEX"
-            value: {{ .Values.jatsxml.index }}
+            value: {{ .Values.general.elasticindex }}
           - name: "ELASTICPASS"
             valueFrom:
               secretKeyRef:
