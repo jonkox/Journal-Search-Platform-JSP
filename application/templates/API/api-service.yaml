@@ -5,12 +5,10 @@ metadata:
   labels:
     app: api
 spec:
-  type: NodePort
   selector:
     app: api
   ports:
-    - name: api-nodeport
+    - name: api-port
       port: 5000
-      nodePort: {{ .Values.api.nodePort }}
 
 

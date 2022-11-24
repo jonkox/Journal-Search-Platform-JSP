@@ -65,7 +65,7 @@ NumeroDeDocumentos = Counter('Documentos', 'API Numero de documentos retornados'
 #-------------------------------------------------------------
 # Métricas
 #-------------------------------------------------------------
-@api.route('/')
+@api.route('/metrics')
 def inicio():
   return Response(generate_latest(), mimetype="text/plain")
 

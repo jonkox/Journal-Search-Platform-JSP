@@ -39,7 +39,6 @@ downloader:
 
 api:
   replicas: 1
-  nodePort: 32225
 
 
 
