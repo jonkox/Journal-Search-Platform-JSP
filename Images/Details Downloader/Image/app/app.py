@@ -1,16 +1,16 @@
 from operator import truediv
-from prometheus_client import Gauge,start_http_server
+from prometheus_client import Gauge,Counter,start_http_server
 from elasticsearch import Elasticsearch
 import elastic_transport
 from time import time,sleep
-import re as Regex
 import mariadb
 import json
 import pika
 import os
 import time
 import requests
-'''
+
+
 # RabbitMQ
 RABBITHOST = os.getenv("RABBITHOST")
 RABBITPORT = os.getenv("RABBITPORT")
@@ -32,36 +32,36 @@ MARIADBPORT = os.getenv("MARIADBPORT")
 MARIADBUSER = os.getenv("MARIADBUSER")
 MARIADBPASS = os.getenv("MARIADBPASS")
 
-#SQLProcessor
-SQLPROCESSORRETRIES = os.getenv("SQLPROCESSORRETRIES")
-SQLPROCESSORTIMEOUT= os.getenv("SQLPROCESSORTIMEOUT")
+#jatsxml
+PODNAME = os.getenv("HOSTNAME")
+APIURL = os.getenv("APIURL")
 
-'''
-#Test values
+"""#Test values
 # RabbitMQ
-RABBITHOST = "databases-rabbitmq"
-RABBITPORT = 5672
-RABBITUSER = "user"
-RABBITPASS = "password"
-RABBITCONSUMEQUEUE = "details-downloader"
-RABBITPUBLISHQUEUE = "publish-queue"
+RABBITHOST = "localhost" #os.getenv("RABBITHOST")
+RABBITPORT = "30100" #os.getenv("RABBITPORT")
+RABBITUSER = "user" #os.getenv("RABBITUSER")
+RABBITPASS = "KzJwjgdHFZV2p5CY" #os.getenv("RABBITPASS")
+RABBITCONSUMEQUEUE = "downloader" #os.getenv("RABBITQUEUENAME")
+RABBITPUBLISHQUEUE = "publish" #os.getenv("RABBITPUBLISHQUEUE")
 
 # Elastic
-ELASTICHOST = "http://databases-elasticsearch.default.svc.cluster.local"
-ELASTICPORT = 9200
-ELASTICUSER = "elastic"
-ELASTICPASS = "password"
-
+ELASTICHOST = "http://localhost"#os.getenv("ELASTICHOST")
+ELASTICPORT = "32500"#os.getenv("ELASTICPORT")
+ELASTICUSER = "elastic" #os.getenv("ELASTICUSER")
+ELASTICPASS = "IzcPIZsyMsLk6E5s" #os.getenv("ELASTICPASS")
+ELASTICINDEX = "registries" #os.getenv("ELASTICINDEX")
 # MariaDB
-MARIADBNAME = "my_database"
-MARIADBHOST = "databases-mariadb-primary"
-MARIADBPORT = 3306
-MARIADBUSER = "root"
-MARIADBPASS = "YES"
+MARIADBNAME = "my_database" #os.getenv("MARIADBNAME")
+MARIADBHOST = "localhost" #os.getenv("MARIADBHOST")
+MARIADBPORT = "32100" #os.getenv("MARIADBPORT")
+MARIADBUSER = "root" #os.getenv("MARIADBUSER")
+MARIADBPASS = "jtGlurMZin" #os.getenv("MARIADBPASS")
 
-#SQLProcessor
-SQLPROCESSORRETRIES = 5
-SQLPROCESSORTIMEOUT= 10
+#details
+PODNAME = "podname" #os.getenv("HOSTNAME")
+APIURL = "https://api.biorxiv.org/" #os.getenv("APIURL")"""
+
 
 # Enum for colors
 class bcolors:
@@ -78,16 +78,21 @@ class DetailsDownloader:
     __publishQueue = None
     __elasticClient = None
     __mariaClient = None
-    __currentJob = None
-    __currentDoc = None
-    __currentDocId = None
-    __currentExpression = None
-    __currentSqltransform = None
-    __time = 0
-    __processedGroups = 0
-    __totalTimeMetric = None
-    __avgTimeMetric = None
-    __processedGroupsMetric = None
+    __currentGroup = None
+    __currentGroupId = None
+    __currentHistoryId = None
+    __currentMessage = None
+    __historyMessage = ""
+
+    __processedDetails = None
+    __notProcessedDetails = None
+    __processedGroups = None
+    __errorCount = None
+    __timeProcessingGroup = Gauge(
+            'detailsdownloader_processing_time_per_group', 
+            'Total amount of time elapsed when processing'
+        )
+    
 
     def __init__(self):
         self.initQueues()
@@ -113,11 +118,13 @@ class DetailsDownloader:
         )
         try:
             self.__elasticClient.info()
+            if(not (self.__elasticClient.indices.exists(index=["groups"]))):
+                self.__elasticClient.indices.create(index="groups")
             return True
         except elastic_transport.ConnectionError:
-            # We raise an exception because the process 
-            # can't continue without a place to look for jobs
-            raise Exception("Error: Couldn't connect to Jobs database")
+            # We raise an exception because the process can't continue
+            # without a place to look for groups and publish
+            raise Exception("Error: Couldn't connect to Elasticsearch database")
 
     # Simple method used to connect to a MariaDB database
     def connectMariadb(self,user,password,host,port):
@@ -131,9 +138,53 @@ class DetailsDownloader:
             )
         except mariadb.OperationalError:
             # We raise an exception because the process 
-            # can't continue without a place to get
-            # information to publish in elastic
+            # can't continue without a place to publish
+            # history registries, and modify jobs and groups
             raise Exception("Error: Couldn't connect to MariaDB database")
+
+        # We try to create tables so they exists when the process starts
+        jobsTable = "CREATE TABLE IF NOT EXISTS jobs ( \
+                            id INT NOT NULL AUTO_INCREMENT, \
+                            created DATETIME, \
+                            status VARCHAR(45), \
+                            end DATETIME, \
+                            loader VARCHAR(45), \
+                            grp_size INT, \
+                            PRIMARY KEY (id) \
+                        )"
+
+        groupsTable = "CREATE TABLE IF NOT EXISTS groups ( \
+                            id INT NOT NULL AUTO_INCREMENT, \
+                            id_job INT NOT NULL, \
+                            created DATETIME, \
+                            end DATETIME, \
+                            stage VARCHAR(45), \
+                            grp_number INT, \
+                            status VARCHAR(45), \
+                            `offset` INT, \
+                            PRIMARY KEY (id), \
+                            FOREIGN KEY (id_job) REFERENCES jobs (id) \
+                        )"
+
+        historyTable = "CREATE TABLE IF NOT EXISTS history ( \
+                            id INT NOT NULL AUTO_INCREMENT, \
+                            component VARCHAR(60), \
+                            status VARCHAR(45), \
+                            created DATETIME, \
+                            end DATETIME, \
+                            message TEXT, \
+                            grp_id INT NOT NULL, \
+                            stage VARCHAR(45), \
+                            PRIMARY KEY (id), \
+                            FOREIGN KEY (grp_id) REFERENCES groups (id) \
+                        )"
+
+        cursor = self.__mariaClient.cursor()
+        cursor.execute(jobsTable)
+        cursor.execute(groupsTable)
+        cursor.execute(historyTable)
+        cursor.execute("SET GLOBAL time_zone = '-6:00'")
+        self.__mariaClient.commit()
 
     # Method to initialize consuming queue and the publishing queue
     def initQueues(self):
@@ -173,69 +224,85 @@ class DetailsDownloader:
             self.__publishQueue = pika.BlockingConnection(rabbitParameters).channel()
         except pika.exceptions.AMQPConnectionError as e:
             # We can't continue without a queue to publish our results
-            print(f"{bcolors.FAIL} Error: {bcolors.RESET} Couldn't connect to RabbitMQ")
+            print(f"{bcolors.FAIL}Error:{bcolors.RESET} Couldn't connect to RabbitMQ")
         #Creating queues
         self.__publishQueue.queue_declare(queue=RABBITPUBLISHQUEUE)
 
     #TODO: change metrics
     # Method to initialize Prometheus metrics
     def initMetrics(self):
-        self.__totalTimeMetric = Gauge(
-            'sqlprocessor_total_processing_time', 
-            'Total amount of time elapsed when processing'
+        self.__processedDetails = Counter(
+            'detailsdownloader_processed_details',
+            'Number of times a jatsxml has been processed (exists)'
         )
-        self.__avgTimeMetric = Gauge(
-            'sqlprocessor_avg_processing_time', 
-            'Average amount of time elapsed when processing'
+
+        self.__notProcessedDetails = Counter(
+            'detailsdownloader_not_processed_details',
+            'Number of times a jatsxml hasn\'t been processed (doesn\'t exists)'
         )
-        self.__processedGroupsMetric = Gauge(
-            'sqlprocessor_number_processed_groups', 
-            'Number of Groups process by SQL Processor'
+
+        self.__processedGroups = Counter(
+            'detailsdownloader_processed_groups',
+            'Number of processed groups'
         )
-        self.__totalTimeMetric.set(0)
-        self.__avgTimeMetric.set(0)
-        self.__processedGroupsMetric.set(0)
+
+        self.__errorCount = Counter(
+            'detailsdownloader_error_count',
+            'Number of errors'
+        )
 
     #This method sets the group's status and creates a new record in the 
     #history table
     #TODO: corregir error y revisar que los nombres de las clmns del query estén bien
     #TODO: ver como se consigue el identificador del pod
-    def startInMariaDB(self, message):
-        id_job = message["id_job"]
-        grp_number = message["grp_number"]
+    def startInMariaDB(self):
+        id_job = self.__currentMessage["id_job"]
+        grp_number = self.__currentMessage["grp_number"]
         try:
             cursor = self.__mariaClient.cursor()
             #Here we'll update the stage and status of the group in mariadb
-            cursor.execute("UPDATE groups SET stage=?, status=? WHERE grp_number=? AND id_job=?", 
+            cursor.execute("UPDATE groups SET stage=?, status=?, id=last_insert_id(id) WHERE grp_number=? AND id_job=?", 
             ("details-downloader","in-progress",grp_number, id_job))
+
+            grp_id = cursor.lastrowid
+
             #Here we'll create a new record in the history table
-            cursor.execute("INSERT INTO history (stage, status, created, end, message, grp_id, component) VALUES (?,?,?,?,?,?,?)", 
-            ("details-downloader","in-progress",int(time.time()), 0, "", "pod-id"))
+            cursor.execute("INSERT INTO history (stage, status, created, end, message, grp_id, component) VALUES (?,?,NOW(),NULL,?,?,?)", 
+            ("details-downloader", "in-progress", "", grp_id, PODNAME))
+
+            self.__currentHistoryId = cursor.lastrowid
+            self.__mariaClient.commit()
         except mariadb.ProgrammingError:
             # There is the possibility the query fails, so we handle that error
             print(
-                bcolors.FAIL + "Error: " + bcolors.RESET + "error en details downloader \
-                failed, document -> " + bcolors.WARNING + self.__currentDoc["grp_number"] + bcolors.RESET
+                bcolors.FAIL + "Error: " + bcolors.RESET + "Couldn't update group nor insert in history table " +
+                "document -> " + bcolors.WARNING + self.__currentMessage + bcolors.RESET
             )
+            self.__historyMessage = "Error in startInMariaDB() function: Couldn't update group nor insert in history table"
+            self.__errorCount.inc()
             return True
         return False
+    
     #This method sets the status of the process to finished in mariaDB
-    def endInMariaDB(self, message):
-        id_job = message["id_job"]
-        grp_number = message["grp_number"]
-        try: 
+    def endInMariaDB(self,result):
+        try:
+            if result:
+                status = "Error"
+            else:
+                status = "Completed"
+
             cursor = self.__mariaClient.cursor()
-            cursor.execute("UPDATE history SET status=?, end=? WHERE grp_number=? AND id_job=?", 
-            ("completed", int(time.time())))
-        except mariadb.ProgrammingError as e:
+            cursor.execute("UPDATE history SET status=?, message=?, end=NOW() WHERE id = ?", 
+            (status,self.__historyMessage,self.__currentHistoryId))
+
+            self.__mariaClient.commit()
+        except mariadb.ProgrammingError:
             # There is the possibility the query fails, so we handle that error
             print(
-                bcolors.FAIL + "Error: " + bcolors.RESET + "details-downloader \
-                failed, document -> " + bcolors.WARNING + self.__currentDoc["grp_number"] + bcolors.RESET
+                bcolors.FAIL + "Error: " + bcolors.RESET + "Couldn't update history table " +
+                "document -> " + bcolors.WARNING + self.__currentMessage + bcolors.RESET
             )
-            cursor = self.__mariaClient.cursor()
-            cursor.execute("UPDATE history SET status=?, end=?, message=? WHERE grp_number=? AND id_job=?", 
-            ("error", int(time.time(), str(e), grp_number, id_job)))
+            self.__errorCount.inc()
             return True
         return False
 
@@ -244,55 +311,123 @@ class DetailsDownloader:
     #TODO: preguntar si el url de medrxiv se pasa por environment variables
     # This method retrieves the group document from elastic with the
     # recieved id_job and grp_number of the queue
-    def getFromElastic(self,message):
-        success = False
+    def getGroupFromElastic(self):
         try:
-            for i in range(int(SQLPROCESSORRETRIES)):
-                search = self.__elasticClient.search(index="groups",size=1,query={"match" : {"grp_number" : message["grp_number"]}})
-                self.__currentDoc = search["hits"]["hits"][0]["_source"]
-                self.__currentDocId = search["hits"]["hits"][0]["_id"]
-                if("docs" in self.__currentDoc):
-                    success = True
-                    break
-                sleep(int(SQLPROCESSORTIMEOUT))
-            if(not success):
-                print(
-                    bcolors.FAIL + "Error:" + bcolors.RESET + " Group doesn't have docs in it -> " + bcolors.WARNING + "grp_number:" + 
-                    message["grp_number"] + bcolors.RESET
-                )
-                return True
-        except IndexError:
-            # if we don't find any document, we can't continue
-            print(
-                bcolors.FAIL + "Error:" + bcolors.RESET + " Didn't find group -> " + bcolors.WARNING + "grp_number:" + 
-                message["grp_number"] + bcolors.RESET
+            search = self.__elasticClient.search(
+                index="groups",size=1,
+                query={
+                    "bool": { 
+                        "must": [ 
+                            { "match": { 
+                                "id_job": self.__currentMessage["id_job"] 
+                                } 
+                            }, 
+                            { "match": { 
+                                "grp_number": self.__currentMessage["grp_number"] 
+                                } 
+                            } 
+                        ] 
+                    } 
+                }
             )
+            self.__currentGroup = search["hits"]["hits"][0]["_source"]
+            self.__currentGroupId = search["hits"]["hits"][0]["_id"]
+        except IndexError:
+            print(f'{bcolors.FAIL}Error:{bcolors.RESET} Didn\'t find group' +
+                f' document -> {bcolors.WARNING}{self.__currentMessage}{bcolors.RESET}'
+            )
+            self.__historyMessage = "Error in getGroupFromElastic() function: Group was't found in Elasticsearch"
+            self.__errorCount.inc()
             return True
+        
+        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at getting group from elastic' +
+            f' document -> {bcolors.GRAY}{self.__currentMessage}{bcolors.RESET}'
+        )
         return False
     
     #This method adds the details retrieved from the api to each document in elasticsearch
     #TODO: pass url through env variables
-    def addDetails(self, message):
-        docs = self.__currentDoc["docs"]
-        detailsUrl = "https://api.biorxiv.org/details/medrxiv/"
+    def addDetails(self):
+        docs = self.__currentGroup["docs"]
 
         try:
             for doc in docs:
-                detailsRequest = requests.get(detailsUrl + doc["rel_doi"])
-                doc["details"] = detailsRequest.text
+                if("rel_site" not in doc or "rel_doi" not in doc):
+                    self.__notProcessedDetails.inc()
+                    continue
+                detailsRequest = requests.get(APIURL + "details/" + doc["rel_site"].lower() + "/" + doc["rel_doi"])
+                details = json.loads(detailsRequest.content)
+                if("collection" not in details):
+                    self.__notProcessedDetails.inc()
+                    continue
+                if(len(details["collection"]) <= 0):
+                    self.__notProcessedDetails.inc()
+                    continue
+                doc["details"] = details["collection"][0]
+                self.__processedDetails.inc()
 
-        except mariadb.ProgrammingError:
+        except:
             # There is the possibility the expression fails, so we handle that error
             print(
-                bcolors.FAIL + "Error: " + bcolors.RESET + "root.stages[name=transform].transformation[type=sql_transform].expression \
-                failed, document -> " + bcolors.WARNING + self.__currentDoc["grp_number"] + bcolors.RESET
+                bcolors.FAIL + "Error: " + bcolors.RESET + "Error while trying to get details" +
+                " document -> " + bcolors.WARNING + self.__currentMessage + bcolors.RESET
             )
+            self.__historyMessage = "Error in addDetails() function: Error while trying to get details"
+            self.__errorCount.inc()
             return True
 
-        self.__currentDoc["docs"] = docs
-        self.__elasticClient.index(index="groups",id=self.__currentDocId,document=self.__currentDoc)
+        self.__currentGroup["docs"] = docs
+        self.__elasticClient.index(index="groups",id=self.__currentGroupId,document=self.__currentGroup, refresh='wait_for')
         return False
     
+    #Publish to the queue the new message
+    def produce(self, message):
+        try:
+            self.__publishQueue.basic_publish(routing_key=RABBITPUBLISHQUEUE, body=message, exchange='')
+        except pika.exceptions.StreamLostError:
+            print(f"{bcolors.FAIL}Error:{bcolors.RESET} connection lost, reconnecting... ")
+            self.reconnectPublishQueue()
+            self.produce(message)
+
+    @__timeProcessingGroup.time()
+    # Method that has all the processing
+    def processing(self):
+        if ("id_job" not in self.__currentMessage or "grp_number" not in self.__currentMessage):
+            print(f'{bcolors.FAIL}Error:{bcolors.RESET} invalid message obtain from queue')
+            self.__errorCount.inc()
+            return True
+        
+        if(self.startInMariaDB()):
+            return True
+
+        if(self.getGroupFromElastic()):
+            return True
+        
+        if(self.addDetails()):
+            return True
+
+        self.produce(json.dumps(self.__currentMessage))
+
+        return False
+
+    # Method used as callback for the consume
+    def consume(self, ch, method, properties, msg):
+        self.__currentMessage = json.loads(msg)
+
+        print(f'{bcolors.OK}Message Receive:{bcolors.RESET} Starting Process -> {bcolors.GRAY}{str(self.__currentMessage)}')
+
+        result = self.processing()
+        if(not result and self.__historyMessage == ""):
+            self.__historyMessage = "succesful process"
+        self.endInMariaDB(result)
+        self.__historyMessage = ""
+    
+        print(f'{bcolors.OK}Group finished:{bcolors.RESET} ->' +
+            f' {bcolors.GRAY}{self.__currentMessage}{bcolors.RESET}'
+        )
+        self.__processedGroups.inc()
+        ch.basic_ack(delivery_tag=method.delivery_tag, multiple=False)
+
     def startProcess(self):
         start_http_server(6941)
         self.__consumerQueue.start_consuming()

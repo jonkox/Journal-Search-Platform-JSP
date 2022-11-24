@@ -1,0 +1,12 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: details-downloader-metrics-service
+  labels:
+    app: details
+spec:
+  selector:
+    app: details
+  ports:
+  - name: metrics
+    port: 6941

@@ -1,0 +1,26 @@
+general:
+  # Elastic
+  elastichost: "http://databases-elasticsearch-master-hl.default.svc.cluster.local"
+  elasticport: 9200
+  elasticuser: "elastic"
+
+  # RabbitMQ
+  rabbithost: "databases-rabbitmq-headless"
+  rabbitport: 5672
+  rabbituser: "user"
+
+  # Mariadb
+  mariadbname: "my_database"
+  mariadbhost: "databases-mariadb-primary"
+  mariadbport: 3306
+  mariadbuser: "root"
+  apiurl: "https://api.biorxiv.org/"
+
+downloader:
+  queuename: "downloader"
+
+detailsDownloader:
+  queuename: "details-downloader"
+
+jatsxml:
+  index: "registries"
