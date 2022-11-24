@@ -15,6 +15,12 @@ general:
   mariadbport: 3306
   mariadbuser: "root"
 
+loader:
+  apibiorxiv: "https://api.biorxiv.org/covid19/0"
+  destqueue: "loader"
+  sleeptime: 1
+  portserver: 6943
+
 detailsDownloader:
   queuename: "details-downloader"
 

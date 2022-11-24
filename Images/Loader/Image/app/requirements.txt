@@ -1,0 +1,4 @@
+mariadb
+prometheus-client
+pika
+requests

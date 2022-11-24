@@ -1,6 +1,6 @@
 from    datetime            import      datetime
 from    time                import      sleep,      time
-from    prometheus_client   import      Counter,    Summary,    start_http_server, Gauge
+from    prometheus_client   import      Counter,    Summary,    start_http_server
 
 import  os
 import  json
@@ -9,6 +9,7 @@ import  mariadb
 import  requests
 import  json
 import  math
+import  unittest
 
 
 #---------------------------------------------------------------------------------------------------------------------------------------------
@@ -32,13 +33,29 @@ MARIADBUSER             =   os.getenv("MARIADBUSER")
 MARIADBPASS             =   os.getenv("MARIADBPASS")
 
 #BioRxiv
-APIBIORXIV              =   os.getenv("APIBIORXIV")
+APIBIORXIV              =   "https://api.biorxiv.org/covid19/0" #os.getenv("APIBIORXIV")
 
 #Pod's name
 PODNAME                 =   os.getenv("HOSTNAME")
 
-SLEEPTIME               =   os.getenv("SLEEPTIME")
-PORTSERVER              =   os.getenv("PORTSERVER")
+SLEEPTIME               =   1    #os.getenv("SLEEPTIME")
+PORTSERVER              =   6343 #os.getenv("PORTSERVER")
+
+MARIADBNAME = "my_database"
+MARIADBHOST = "localhost"
+MARIADBPORT = 32100
+MARIADBUSER = "root"
+MARIADBPASS = "3VopN5R26q"
+
+
+#RABBITMQ
+RABBITHOST          =   "localhost"         #os.getenv("RABBITHOST")
+RABBITPORT          =   "30100"             #os.getenv("RABBITPORT")
+RABBITUSER          =   "user"              #os.getenv("RABBITUSER")
+RABBITPASS          =   "kU0eN0mRWq4Q0eVu"  #os.getenv("RABBITPASS")
+RABBITDEST          =   "REGEX-FUENTE"      #os.getenv("RABBITQUEUENAME")
+
+
 
 
 #---------------------------------------------------------------------------------------------------------------------------------------------
@@ -54,7 +71,7 @@ class bcolors:
 
 
 
-class Loader:
+class Loader(unittest.TestCase):
 
     CONN                =   None            #MariaDB connection
     CUR                 =   None            #MariaDB cursor
@@ -64,8 +81,11 @@ class Loader:
     PROCESSEDGROUPS     =   None            #Total quantity of groups has been processed
     ERRORS              =   None            #Quantity of errors that has been ocur
     JOBSDONE            =   None            #Quantity of jobs that has been processed
-    GROUPTIME           =   None            #Time took from the processing of the group
-    TOTALMESSAGES       =   None            #Quantity of document's total from the API
+    STMT                =   "SELECT id,created,status,end,loader,grp_size FROM jobs WHERE status = 'new' LIMIT 1"
+    AVGTIME             =   Summary(
+                            'loader_avg_processing_time', 
+                            'Average amount of time elapsed when processing')
+    TOTALMESSAGES       =   0
     
     #Constructor method
     def __init__(self):
@@ -149,12 +169,6 @@ class Loader:
             'loader_number_processed_jobs', 
             'Number of Jobs processed by LOADER'
         )
-        self.GROUPTIME = Gauge(
-            'loader_time_of_processed_group', 
-            'Time of the latest group processed by LOADER'
-        )
-
-        self.GROUPTIME.set(0)
 
     #Reconnect to the queue in case there is any problem
     def reconnectPublishQueue(self):
@@ -195,8 +209,10 @@ class Loader:
 
         return math.ceil(groups)
 
+
     #The main loop, continuously checks for new jobs and processes it
     def transaction(self):
+        self.get_info(0)
         while True:
             try:
                 sleep(int(SLEEPTIME))
@@ -216,29 +232,25 @@ class Loader:
             
             for i in range(grps):
                 try:
-                    firstTime = time()                                                              #Take initial time
+
                     self.CUR.execute(f"INSERT INTO groups(id_job,created,end,stage,grp_number,status,`offset`) \
-                                        VALUES ({str(id)},now(),null,'Loader',{str(i)},null,{str(offset)})")            #Make the insert
-                    self.CONN.commit()                                                                                  #Commit the changes
+                                        VALUES ({str(id)},now(),null,'Loader',{str(i)},null,{str(offset)})")
+                    self.CONN.commit()
                     offset += length
 
-                    #Produce the message to RabbitMQ and send it
                     self.MSG = {"id_job":id, "grp_number": i}
                     self.produce(self.MSG)
-                    
-                    
-                    #Update metrics
                     self.PROCESSEDGROUPS.inc()
-                    timeTook = time() - firstTime
-                    self.GROUPTIME.set(timeTook)
-
+                    
                     print(f"{bcolors.OK}Processing: {bcolors.RESET} Group {self.MSG} has been processed succesfully.")
                 
                 except mariadb.ProgrammingError as e:
                     print(f"{bcolors.FAIL}ERROR: {bcolors.RESET} {e}")
                     self.ERRORS.inc()
 
+
     #process_job processes a job and creates its respective groups.
+    @AVGTIME.time()
     def process_job(self):
         #This statement takes 1 job to be processed and at the same time updates it.
         stmt = f"UPDATE jobs SET `status` = 'In-progress', loader='{str(PODNAME)}' ,id=last_insert_id(id) WHERE `status` = 'new' LIMIT 1"

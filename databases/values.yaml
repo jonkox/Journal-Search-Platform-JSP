@@ -1,4 +1,4 @@
-enableElastic : true
+enableElastic : false
 enableMaria : true
 enableRabbit : true
 
