@@ -33,6 +33,7 @@ MARIADBPASS             =   os.getenv("MARIADBPASS")
 
 #BioRxiv
 APIBIORXIV              =   os.getenv("APIBIORXIV")
+APIBIORXIV              +=  "covid19/0"
 
 #Pod's name
 PODNAME                 =   os.getenv("HOSTNAME")
@@ -69,7 +70,6 @@ class Loader:
     
     #Constructor method
     def __init__(self):
-
         #Starting server where we send metrics
         start_http_server(int(PORTSERVER))
 

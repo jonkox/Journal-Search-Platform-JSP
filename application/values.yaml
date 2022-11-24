@@ -14,16 +14,25 @@ general:
   mariadbhost: "databases-mariadb-primary"
   mariadbport: 3306
   mariadbuser: "root"
+  apiurl: "https://api.biorxiv.org/"
 
 loader:
-  apibiorxiv: "https://api.biorxiv.org/covid19/0"
-  destqueue: "loader"
+  queuename: "loader"
   sleeptime: 1
-  portserver: 6943
-
+  replicas: 3
+  metrics: 6943
 
 detailsDownloader:
   queuename: "details-downloader"
+  replicas: 3
+  metrics: 6947
 
 jatsxml:
   index: "registries"
+  replicas: 3
+  metrics: 6948
+
+downloader:
+  queuename: "downloader"
+  replicas: 3
+  metrics: 6944

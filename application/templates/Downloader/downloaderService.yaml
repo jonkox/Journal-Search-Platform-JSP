@@ -1,0 +1,12 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: downloader-metrics-service
+  labels:
+    app: downloader
+spec:
+  selector:
+    app: downloader
+  ports:
+  - name: metrics
+    port: {{ .Values.downloader.metrics }}

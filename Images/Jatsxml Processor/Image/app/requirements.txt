@@ -1,0 +1,6 @@
+prometheus-client
+elasticsearch
+mariadb
+pika
+xmltodict
+requests

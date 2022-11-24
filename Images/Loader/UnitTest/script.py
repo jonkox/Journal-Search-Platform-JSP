@@ -9,7 +9,7 @@ MARIADBNAME = "my_database"
 MARIADBHOST = "localhost"
 MARIADBPORT = 32100
 MARIADBUSER = "root"
-MARIADBPASS = "3VopN5R26q"
+MARIADBPASS = "jtGlurMZin"
 
 def connectMariaDB():
     val = 2

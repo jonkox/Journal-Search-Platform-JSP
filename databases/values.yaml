@@ -2,7 +2,6 @@ enableElastic : false
 enableMaria : true
 enableRabbit : true
 
-
 elasticsearch:
   global:
     kibanaEnabled: true

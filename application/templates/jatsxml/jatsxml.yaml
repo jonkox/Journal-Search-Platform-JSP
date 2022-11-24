@@ -1,26 +1,40 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: loader-processor
+  name: jatsxml-processor
   labels:
-    app: loader
+    app: jatsxml
 spec:
-  replicas: {{.Values.loader.replicas}}
+  replicas: {{ .Values.jatsxml.replicas }}
   selector:
     matchLabels:
-      app: loader
+      app: jatsxml
   template:
     metadata:
       labels:
-        app: loader
+        app: jatsxml
     spec:
       containers:
-      - name: loader-processor
-        image: jonkox/loader
+      - name: jatsxml-processor
+        image: deansf/jatsxml-processor
         ports:
           - name: metrics
-            containerPort: {{.Values.loader.metrics}}
+            containerPort: {{ .Values.jatsxml.metrics }}
         env:
+          - name: "ELASTICHOST"
+            value: {{ .Values.general.elastichost }}
+          - name: "ELASTICPORT"
+            value: {{ .Values.general.elasticport | quote }}
+          - name: "ELASTICUSER"
+            value: {{ .Values.general.elasticuser }}
+          - name: "ELASTICINDEX"
+            value: {{ .Values.jatsxml.index }}
+          - name: "ELASTICPASS"
+            valueFrom:
+              secretKeyRef:
+                name: databases-elasticsearch
+                key: elasticsearch-password
+                optional: false
           - name: "RABBITHOST"
             value: {{ .Values.general.rabbithost }}
           - name: "RABBITPORT"
@@ -33,8 +47,8 @@ spec:
                 name: databases-rabbitmq
                 key: rabbitmq-password
                 optional: false
-          - name: "RABBITDEST"
-            value: {{ .Values.loader.queuename }}
+          - name: "RABBITCONSUMEQUEUE"
+            value: {{ .Values.detailsDownloader.queuename }}
           - name: "MARIADBNAME"
             value: {{ .Values.general.mariadbname }}
           - name: "MARIADBHOST"
@@ -49,9 +63,6 @@ spec:
                 name: databases-mariadb
                 key: mariadb-root-password
                 optional: false
-          - name: "APIBIORXIV"
-            value: {{.Values.general.apiurl}}
-          - name: "SLEEPTIME"
-            value: {{.Values.loader.sleeptime | quote}}
-          - name: "PORTSERVER"
-            value: {{.Values.loader.metrics | quote}}
+          - name: "METRICSPORT"
+            value: {{ .Values.jatsxml.metrics | quote }}
+          
