@@ -9,10 +9,10 @@ MARIADBNAME = "my_database"
 MARIADBHOST = "localhost"
 MARIADBPORT = 32100
 MARIADBUSER = "root"
-MARIADBPASS = "3VopN5R26q"
+MARIADBPASS = "jtGlurMZin"
 
 def connectMariaDB():
-    val = False
+    val = True
 
     
     #Connect to mariadb
@@ -51,14 +51,19 @@ def connectMariaDB():
                             PRIMARY KEY (id), \
                             FOREIGN KEY (id_job) REFERENCES jobs (id) \
                         )"
-        cur.execute("DROP TABLE IF EXISTS my_database.groups")
-        cur.execute("DROP TABLE IF EXISTS my_database.jobs")
+        
+        cur.execute("delete from history where true = true")
+        cur.execute("delete from `groups` where true = true")
+        cur.execute("delete from jobs where true = true")
+
+        #cur.execute("DROP TABLE IF EXISTS my_database.groups")
+        #cur.execute("DROP TABLE IF EXISTS my_database.jobs")
         cur.execute(jobsTable)
         cur.execute(groupsTable)
         conn.commit()
 
 
-        for i in range(200):
+        for i in range(1):
             print("INSERTANDO JOBS")
             cur.execute(f"insert INTO my_database.jobs(created,status,end,loader,grp_size) values(now(),'NEW',null,null,{str(random.randint(10,2000))})")
         conn.commit()

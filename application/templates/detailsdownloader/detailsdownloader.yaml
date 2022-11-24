@@ -66,4 +66,4 @@ spec:
           - name: "APIURL"
             value: {{ .Values.general.apiurl }}
           - name: "METRICSPORT"
-            value: {{ .Values.detailsDownloader.metrics }}
+            value: {{ .Values.detailsDownloader.metrics | quote }}

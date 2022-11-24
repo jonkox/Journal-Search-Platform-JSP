@@ -62,6 +62,7 @@ MARIADBPASS = os.getenv("MARIADBPASS")
 COMPONENT = os.getenv("HOSTNAME")
 
 URL = os.getenv("APIBIORVIXURL")
+URL += "covid19/"
 
 METRICSPORT = os.getenv("METRICSPORT")
 
@@ -93,7 +94,6 @@ class Downloader:
 
     #Constructor method
     def __init__(self):
-        URL += "covid19/"
         # Initialize variables for metrics
         self.totalProcessingTime = Gauge(
             'downloader_total_processing_time', 
