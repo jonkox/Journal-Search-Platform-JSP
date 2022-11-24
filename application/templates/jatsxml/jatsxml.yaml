@@ -5,7 +5,7 @@ metadata:
   labels:
     app: jatsxml
 spec:
-  replicas: 1
+  replicas: {{ .Values.jatsxml.replicas }}
   selector:
     matchLabels:
       app: jatsxml
