@@ -24,12 +24,12 @@ loader:
 
 detailsDownloader:
   queuename: "details-downloader"
-  replicas: 3
+  replicas: 18
   metrics: 6947
 
 jatsxml:
   index: "registries"
-  replicas: 3
+  replicas: 24
   metrics: 6948
 
 downloader:

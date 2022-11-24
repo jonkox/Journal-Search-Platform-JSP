@@ -286,6 +286,8 @@ class DetailsDownloader:
     
     #This method sets the status of the process to finished in mariaDB
     def endInMariaDB(self,result):
+        id_job = self.__currentMessage["id_job"]
+        grp_number = self.__currentMessage["grp_number"]
         try:
             if result:
                 status = "Error"
@@ -295,6 +297,9 @@ class DetailsDownloader:
             cursor = self.__mariaClient.cursor()
             cursor.execute("UPDATE history SET status=?, message=?, end=NOW() WHERE id = ?", 
             (status,self.__historyMessage,self.__currentHistoryId))
+            
+            cursor.execute("UPDATE groups SET status=? WHERE grp_number=? AND id_job=?", 
+            ("Completed",grp_number, id_job))
 
             self.__mariaClient.commit()
         except mariadb.ProgrammingError:

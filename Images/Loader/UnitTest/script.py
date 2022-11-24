@@ -62,10 +62,10 @@ def connectMariaDB():
         cur.execute(groupsTable)
         conn.commit()
 
-
+        # {str(random.randint(10,2000))}
         for i in range(1):
             print("INSERTANDO JOBS")
-            cur.execute(f"insert INTO my_database.jobs(created,status,end,loader,grp_size) values(now(),'NEW',null,null,{str(random.randint(10,2000))})")
+            cur.execute(f"insert INTO my_database.jobs(created,status,end,loader,grp_size) values(now(),'NEW',null,null,50)")
         conn.commit()
     
     if not val:
