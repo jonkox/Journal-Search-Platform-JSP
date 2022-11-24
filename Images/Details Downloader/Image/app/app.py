@@ -35,6 +35,7 @@ MARIADBPASS = os.getenv("MARIADBPASS")
 #jatsxml
 PODNAME = os.getenv("HOSTNAME")
 APIURL = os.getenv("APIURL")
+METRICSPORT = os.getenv("METRICSPORT")
 
 """#Test values
 # RabbitMQ
@@ -429,7 +430,7 @@ class DetailsDownloader:
         ch.basic_ack(delivery_tag=method.delivery_tag, multiple=False)
 
     def startProcess(self):
-        start_http_server(6941)
+        start_http_server(int(METRICSPORT))
         self.__consumerQueue.start_consuming()
 
 downloader = DetailsDownloader()

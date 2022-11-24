@@ -21,6 +21,7 @@ downloader:
 
 detailsDownloader:
   queuename: "details-downloader"
+  metrics: 6947
 
 jatsxml:
   index: "registries"

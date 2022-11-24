@@ -9,4 +9,4 @@ spec:
     app: details
   ports:
   - name: metrics
-    port: 6941
+    port: {{ .Values.detailsDownloader.metrics }}

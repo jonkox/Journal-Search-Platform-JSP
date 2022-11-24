@@ -19,7 +19,7 @@ spec:
         image: deansf/details-downloader
         ports:
           - name: metrics
-            containerPort: 6941
+            containerPort: {{ .Values.detailsDownloader.metrics }}
         env:
           - name: "ELASTICHOST"
             value: {{ .Values.general.elastichost }}
@@ -65,3 +65,5 @@ spec:
                 optional: false
           - name: "APIURL"
             value: {{ .Values.general.apiurl }}
+          - name: "METRICSPORT"
+            value: {{ .Values.detailsDownloader.metrics }}
