@@ -9,11 +9,8 @@ spec:
   selector:
     app: api
   ports:
-    - protocol: TCP
-      name: api-port
+    - name: api-nodeport
       port: 5000
-      targetPort: 5000
-    - name: metrics
-      port: {{.Values.api.metrics}}
+      nodePort: {{ .Values.api.nodePort }}
 
 

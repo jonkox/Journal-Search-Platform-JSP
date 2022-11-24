@@ -1,7 +1,7 @@
 from flask import Flask, request, Response
 import pyrebase
 from flask_cors import CORS
-from prometheus_client import Counter, start_http_server
+from prometheus_client import Counter, generate_latest
 import datetime
 from elasticsearch import Elasticsearch
 import elastic_transport
@@ -22,8 +22,6 @@ MARIADBHOST = os.getenv("MARIADBHOST")
 MARIADBPORT = os.getenv("MARIADBPORT")
 MARIADBUSER = os.getenv("MARIADBUSER")
 MARIADBPASS = os.getenv("MARIADBPASS")
-
-METRICSPORT = os.getenv("METRICSPORT")
 
 try:
   MariaClient = mariadb.connect(
@@ -67,7 +65,9 @@ NumeroDeDocumentos = Counter('Documentos', 'API Numero de documentos retornados'
 #-------------------------------------------------------------
 # Métricas
 #-------------------------------------------------------------
-start_http_server(int(METRICSPORT))
+@api.route('/')
+def inicio():
+  return Response(generate_latest(), mimetype="text/plain")
 
 #-------------------------------------------------------------
 # Añadir job a MariaDB
@@ -122,7 +122,7 @@ def buscar():
   try:
     respuesta = ElasticClient.search(index=ELASTICINDEX, query={"multi_match" : {"query":query, "fields": 
     ["rel_date","rel_title","rel_site","rel_abs","rel_authors.author_name","rel_authors.author_inst",
-    "license","type","category","details.jatsxml"]}},size = 100)
+    "license","type","category","details.jatsxml"]}},size = 100,source=["rel_title","rel_abs","rel_authors"])
     cantidad = respuesta['hits']['total']['value']
     if cantidad >= 100:
       NumeroDeDocumentos.inc(100)
@@ -130,7 +130,7 @@ def buscar():
       NumeroDeDocumentos.inc(cantidad)
     base.child("articulos").remove()
     for j in respuesta['hits']['hits']:
-      lista.append(j["_source"])
+      lista.append(j["_source"]) 
       docu = {"titulo":j["_source"]["rel_title"],"autores":j["_source"]["rel_authors"], "abstract": j["_source"]["rel_abs"]}
       base.child("articulos").push(docu)
   except:

@@ -6,7 +6,7 @@ general:
   elasticindex: "registries"
 
   # RabbitMQ
-  rabbithost: "monitoring-rabbitmq-headless"
+  rabbithost: "databases-rabbitmq-headless"
   rabbitport: 5672
   rabbituser: "user"
 
@@ -25,11 +25,11 @@ loader:
 
 detailsDownloader:
   queuename: "details-downloader"
-  replicas: 18
+  replicas: 3
   metrics: 6947
 
 jatsxml:
-  replicas: 24
+  replicas: 3
   metrics: 6948
 
 downloader:
@@ -39,7 +39,7 @@ downloader:
 
 api:
   replicas: 1
-  metrics: 6942
+  nodePort: 32225
 
 
 
