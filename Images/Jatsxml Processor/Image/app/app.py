@@ -1,6 +1,5 @@
-from prometheus_client import Counter,Summary,start_http_server
+from prometheus_client import Counter,Gauge,start_http_server
 from elasticsearch import Elasticsearch
-from time import time
 from xml import parsers
 
 import elastic_transport
@@ -35,6 +34,7 @@ MARIADBPASS = os.getenv("MARIADBPASS")
 
 #jatsxml
 PODNAME = os.getenv("HOSTNAME")
+METRICSPORT = os.getenv("METRICSPORT")
 
 
 """# RabbitMQ
@@ -86,7 +86,7 @@ class JatsxmlProcessor:
     __processedGroups = None
     __errorCount = None
 
-    __processingTimePerGroup = Summary(
+    __processingTimePerGroup = Gauge(
             'jatsxml_processing_time_per_group', 
             'Time elapsed from processing each group'
         )
@@ -259,7 +259,7 @@ class JatsxmlProcessor:
             self.__errorCount.inc()
             return "Failed"
 
-        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at getting Jatsxml' +
+        print(f'{bcolors.PROCESSING}Processing:{bcolors.RESET} success at getting Jatsxml' +
             f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
         )
         return currentObtainJatsxml
@@ -283,7 +283,7 @@ class JatsxmlProcessor:
             self.__errorCount.inc()
             return True
         
-        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at updating group table' +
+        print(f'{bcolors.PROCESSING}Processing:{bcolors.RESET} success at updating group table' +
             f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
         )
         return False
@@ -307,7 +307,7 @@ class JatsxmlProcessor:
             self.__historyMessage = "Error in finishedGroup() function: Couldn't update group table"
             self.__errorCount.inc()
             return True
-        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at updating group table' +
+        print(f'{bcolors.PROCESSING}Processing:{bcolors.RESET} success at updating group table' +
             f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
         )
         return False
@@ -352,12 +352,12 @@ class JatsxmlProcessor:
                 self.__historyMessage = "Error in finishedJob() function: Couldn't update jobs table"
                 self.__errorCount.inc()
                 return True
-            print(f'{bcolors.OK}Processing:{bcolors.RESET} success at updating jobs table' +
+            print(f'{bcolors.PROCESSING}Processing:{bcolors.RESET} success at updating jobs table' +
                 f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
             )
             return False
         
-        print(f'{bcolors.OK}Processing:{bcolors.RESET} job isn\'t yet completed, continuing process' +
+        print(f'{bcolors.PROCESSING}Processing:{bcolors.RESET} job isn\'t yet completed, continuing process' +
             f' -> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
         )
         return False
@@ -388,7 +388,7 @@ class JatsxmlProcessor:
             )
             self.__errorCount.inc()
             return True
-        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at creating new registry in history table' +
+        print(f'{bcolors.PROCESSING}Processing:{bcolors.RESET} success at creating new registry in history table' +
             f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
         )
         return False
@@ -411,7 +411,7 @@ class JatsxmlProcessor:
             cursor.execute(updateHistoryQuery)
             self.__historyId = cursor.lastrowid
             self.__mariaClient.commit()
-            print(f'{bcolors.OK}Processing:{bcolors.RESET} success at modifying history' +
+            print(f'{bcolors.PROCESSING}Processing:{bcolors.RESET} success at modifying history' +
                 f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
             )
         except mariadb.ProgrammingError:
@@ -451,7 +451,7 @@ class JatsxmlProcessor:
             self.__errorCount.inc()
             return True
         
-        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at getting group from elastic' +
+        print(f'{bcolors.PROCESSING}Processing:{bcolors.RESET} success at getting group from elastic' +
             f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
         )
         return False
@@ -465,11 +465,11 @@ class JatsxmlProcessor:
             else:
                 self.__notProcessedJatsxml.inc()
             self.__elasticClient.index(index=ELASTICINDEX, document=doc, refresh='wait_for')
-            print(f'{bcolors.OK}Processing:{bcolors.RESET} success at publishing new doc' +
+            print(f'{bcolors.PROCESSING}Processing:{bcolors.RESET} success at publishing new doc' +
                 f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
             )
         self.__elasticClient.delete(index="groups", id=self.__currentGroupId)
-        print(f'{bcolors.OK}Processing:{bcolors.RESET} success at deleting group' +
+        print(f'{bcolors.PROCESSING}Processing:{bcolors.RESET} success at deleting group' +
             f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
         )
         return False
@@ -525,7 +525,7 @@ class JatsxmlProcessor:
         ch.basic_ack(delivery_tag=method.delivery_tag, multiple=False)
 
     def startProcess(self):
-        start_http_server(6941)
+        start_http_server(int(METRICSPORT))
         self.__consumerQueue.start_consuming()
 
 JatsxmlProcessor()

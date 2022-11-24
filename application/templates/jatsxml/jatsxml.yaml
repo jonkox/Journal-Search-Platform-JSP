@@ -19,7 +19,7 @@ spec:
         image: deansf/jatsxml-processor
         ports:
           - name: metrics
-            containerPort: 6941
+            containerPort: {{ .Values.jatsxml.metrics }}
         env:
           - name: "ELASTICHOST"
             value: {{ .Values.general.elastichost }}
@@ -63,4 +63,6 @@ spec:
                 name: databases-mariadb
                 key: mariadb-root-password
                 optional: false
+          - name: "METRICSPORT"
+            value: {{ .Values.jatsxml.metrics | quote }}
           

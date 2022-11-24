@@ -9,4 +9,4 @@ spec:
     app: jatsxml
   ports:
   - name: metrics
-    port: 6941
+    port: {{ .Values.jatsxml.metrics }}

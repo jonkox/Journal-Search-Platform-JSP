@@ -20,3 +20,4 @@ detailsDownloader:
 
 jatsxml:
   index: "registries"
+  metrics: 6948
