@@ -515,7 +515,7 @@ class JatsxmlProcessor:
 
         result = self.processing()
         if(not result and self.__historyMessage == ""):
-            self.__historyMessage = "succesful process"
+            self.__historyMessage = "successful process"
         
         self.modifyHistory(result)
 

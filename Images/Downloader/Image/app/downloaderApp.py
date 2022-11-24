@@ -111,7 +111,12 @@ class Downloader:
         self.amountDownloadedDocuments = Gauge(
             'downloader_amount_downloaded_docs', 
             'Number of documents downloaded by downloader')
+        
+        self.errorCount = Gauge(
+            'downloader_error_count', 
+            'Number of errors by downloader')
 
+        self.errorCount.set(0)
         self.totalProcessingTime.set(0)
         self.avgProcessingTime.set(0)
         self.numberOfProcessedGroups.set(0)
@@ -178,6 +183,7 @@ class Downloader:
             self.MariaClient.commit()
 
         except:
+            self.errorCount.inc()
             print("Error: Couldn't connect to MariaDB") 
     
     #-----------------------------------------------------------------------         
@@ -340,6 +346,11 @@ class Downloader:
             self.mariadbCursor = self.MariaClient.cursor(prepared = True)
             self.mariadbCursor.execute(update_history_query3, (message,history_id,))
             self.MariaClient.commit()
+        else:
+            update_history_query3 = """UPDATE history SET message = %s WHERE id = %s"""
+            self.mariadbCursor = self.MariaClient.cursor(prepared = True)
+            self.mariadbCursor.execute(update_history_query3, ("successful process",history_id,))
+            self.MariaClient.commit()
 
     #-----------------------------------------------------------------------         
     # Function that calls downloader tasks
@@ -386,6 +397,7 @@ class Downloader:
             channel.queue_declare(queue = queueName)
             channel.basic_qos(prefetch_count=1)
         except pika.exceptions.AMQPConnectionError:
+            self.errorCount.inc()
             raise Exception("Error: Couldn't connect to RabbitMQ")
 
         message = {
@@ -438,6 +450,8 @@ class Downloader:
             ch.basic_ack(delivery_tag=method.delivery_tag, multiple=False)
         
         except Exception as error:
+            self.errorCount.inc()
+
             # If work was unsuccessful then update history table with error message
             self.updateHistoryTable('error', str(error))
 

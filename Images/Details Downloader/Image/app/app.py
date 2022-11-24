@@ -424,7 +424,7 @@ class DetailsDownloader:
 
         result = self.processing()
         if(not result and self.__historyMessage == ""):
-            self.__historyMessage = "succesful process"
+            self.__historyMessage = "successful process"
         self.endInMariaDB(result)
         self.__historyMessage = ""
     
