@@ -14,6 +14,7 @@ En MariaDB podemos ver que la tabla history tiene la entrada completada
 ![image](https://user-images.githubusercontent.com/60998008/203886426-7eceeede-1dcc-4cde-8266-81d2e47401ee.png)
 También podemos ver el cambio en la tabla groups
 ![image](https://user-images.githubusercontent.com/60998008/203886459-6cdb00d6-369b-45c0-a2b5-827a09104422.png)
+
 Recomendaciones
 
 - Se recomienda a nuevos integrantes del proyecto que no conocen el funcionamiento de este, consultar a los miembros del equipo cómo funciona para poder hacer pruebas e integrar sus partes sin problemas.
@@ -23,3 +24,5 @@ Recomendaciones
 Conclusiones
 
 -El uso de réplicas permite acelerar procesos en los que se deben procesar muchos documentos como el que se realiza en este proyecto
+
+-En este proyecto se aprendió a interactuar con una api externa para consumir información que podemos luego utilizar para otras cosas
