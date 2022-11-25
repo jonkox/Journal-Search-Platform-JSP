@@ -21,4 +21,5 @@ Recomendaciones
 - Se recomienda en caso de tener suficientes recursos, remover las limitaciones de recursos establecidas a los deployments. En este caso se usaron porque sin estas no nos corría.
 
 Conclusiones
+
 -El uso de réplicas permite acelerar procesos en los que se deben procesar muchos documentos como el que se realiza en este proyecto
