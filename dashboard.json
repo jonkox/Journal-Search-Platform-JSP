@@ -70,12 +70,12 @@
           "overrides": []
         },
         "gridPos": {
-          "h": 8,
+          "h": 6,
           "w": 24,
           "x": 0,
           "y": 1
         },
-        "id": 6,
+        "id": 23,
         "options": {
           "orientation": "auto",
           "reduceOptions": {
@@ -97,49 +97,14 @@
               "uid": "PBFA97CFB590B2093"
             },
             "editorMode": "builder",
-            "expr": "jatsxml_processed_groups_total",
-            "legendFormat": "{{pod}}",
-            "range": true,
-            "refId": "Jatsxml"
-          },
-          {
-            "datasource": {
-              "type": "prometheus",
-              "uid": "PBFA97CFB590B2093"
-            },
-            "editorMode": "builder",
             "expr": "loader_number_processed_groups_total",
             "hide": false,
             "legendFormat": "{{pod}}",
             "range": true,
             "refId": "Loader"
-          },
-          {
-            "datasource": {
-              "type": "prometheus",
-              "uid": "PBFA97CFB590B2093"
-            },
-            "editorMode": "builder",
-            "expr": "downloader_number_processed_groups",
-            "hide": false,
-            "legendFormat": "{{pod}}",
-            "range": true,
-            "refId": "Downloader"
-          },
-          {
-            "datasource": {
-              "type": "prometheus",
-              "uid": "PBFA97CFB590B2093"
-            },
-            "editorMode": "builder",
-            "expr": "detailsdownloader_processed_groups_total",
-            "hide": false,
-            "legendFormat": "{{pod}}",
-            "range": true,
-            "refId": "Details-Downloader"
           }
         ],
-        "title": "Processed Groups",
+        "title": "Processed Groups by Loader",
         "type": "gauge"
       },
       {
@@ -174,7 +139,204 @@
           "h": 6,
           "w": 24,
           "x": 0,
-          "y": 9
+          "y": 7
+        },
+        "id": 24,
+        "options": {
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true,
+          "text": {}
+        },
+        "pluginVersion": "9.1.5",
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "PBFA97CFB590B2093"
+            },
+            "editorMode": "builder",
+            "expr": "downloader_number_processed_groups",
+            "hide": false,
+            "legendFormat": "{{pod}}",
+            "range": true,
+            "refId": "Downloader"
+          }
+        ],
+        "title": "Processed Groups by Downloader",
+        "type": "gauge"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA97CFB590B2093"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "percentage",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "orange",
+                  "value": 70
+                },
+                {
+                  "color": "red",
+                  "value": 85
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 6,
+          "w": 24,
+          "x": 0,
+          "y": 13
+        },
+        "id": 25,
+        "options": {
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true,
+          "text": {}
+        },
+        "pluginVersion": "9.1.5",
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "PBFA97CFB590B2093"
+            },
+            "editorMode": "builder",
+            "expr": "detailsdownloader_processed_groups_total",
+            "hide": false,
+            "legendFormat": "{{pod}}",
+            "range": true,
+            "refId": "Details-Downloader"
+          }
+        ],
+        "title": "Processed Groups by Details Downloader",
+        "type": "gauge"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA97CFB590B2093"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "percentage",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "orange",
+                  "value": 70
+                },
+                {
+                  "color": "red",
+                  "value": 85
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 6,
+          "w": 24,
+          "x": 0,
+          "y": 19
+        },
+        "id": 6,
+        "options": {
+          "orientation": "auto",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": "",
+            "values": false
+          },
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true,
+          "text": {}
+        },
+        "pluginVersion": "9.1.5",
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "PBFA97CFB590B2093"
+            },
+            "editorMode": "builder",
+            "expr": "jatsxml_processed_groups_total",
+            "legendFormat": "{{pod}}",
+            "range": true,
+            "refId": "Jatsxml"
+          }
+        ],
+        "title": "Processed Groups by Jatsxml",
+        "type": "gauge"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA97CFB590B2093"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [],
+            "thresholds": {
+              "mode": "percentage",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "orange",
+                  "value": 70
+                },
+                {
+                  "color": "red",
+                  "value": 85
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 6,
+          "w": 24,
+          "x": 0,
+          "y": 25
         },
         "id": 8,
         "options": {
@@ -267,7 +429,7 @@
           "h": 9,
           "w": 12,
           "x": 0,
-          "y": 15
+          "y": 31
         },
         "id": 4,
         "options": {
@@ -395,7 +557,7 @@
           "h": 9,
           "w": 12,
           "x": 12,
-          "y": 15
+          "y": 31
         },
         "id": 2,
         "options": {
@@ -523,7 +685,7 @@
           "h": 8,
           "w": 24,
           "x": 0,
-          "y": 24
+          "y": 40
         },
         "id": 12,
         "options": {
@@ -639,7 +801,7 @@
           "h": 9,
           "w": 24,
           "x": 0,
-          "y": 32
+          "y": 48
         },
         "id": 14,
         "options": {
@@ -688,7 +850,7 @@
           "h": 1,
           "w": 24,
           "x": 0,
-          "y": 41
+          "y": 57
         },
         "id": 16,
         "panels": [
@@ -737,8 +899,7 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "green",
-                      "value": null
+                      "color": "green"
                     },
                     {
                       "color": "red",
@@ -753,7 +914,7 @@
               "h": 8,
               "w": 24,
               "x": 0,
-              "y": 42
+              "y": 2
             },
             "id": 18,
             "options": {
@@ -829,8 +990,7 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "green",
-                      "value": null
+                      "color": "green"
                     },
                     {
                       "color": "red",
@@ -845,7 +1005,7 @@
               "h": 8,
               "w": 12,
               "x": 0,
-              "y": 50
+              "y": 10
             },
             "id": 22,
             "options": {
@@ -922,8 +1082,7 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "green",
-                      "value": null
+                      "color": "green"
                     },
                     {
                       "color": "red",
@@ -938,7 +1097,7 @@
               "h": 8,
               "w": 12,
               "x": 12,
-              "y": 50
+              "y": 10
             },
             "id": 20,
             "options": {
@@ -974,7 +1133,7 @@
         "type": "row"
       }
     ],
-    "refresh": "5s",
+    "refresh": false,
     "schemaVersion": 37,
     "style": "dark",
     "tags": [],
@@ -989,6 +1148,6 @@
     "timezone": "",
     "title": "JSP Application",
     "uid": "80diyUOVk",
-    "version": 6,
+    "version": 9,
     "weekStart": ""
   }
