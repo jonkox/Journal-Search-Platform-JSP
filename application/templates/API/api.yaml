@@ -21,6 +21,8 @@ spec:
         ports:
           - name: api-port
             containerPort: 5000
+          - name: metrics
+            containerPort: {{ .Values.api.metrics }}
         env:
         - name: "ELASTICINDEX"
           value: {{ .Values.general.elasticindex }}
@@ -50,3 +52,5 @@ spec:
               name: databases-mariadb
               key: mariadb-root-password
               optional: false
+        - name: "METRICSPORT"
+          value: {{ .Values.api.metrics | quote }}

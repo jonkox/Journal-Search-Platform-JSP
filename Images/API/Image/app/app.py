@@ -1,7 +1,7 @@
 from flask import Flask, request, Response
 import pyrebase
 from flask_cors import CORS
-from prometheus_client import Counter, generate_latest
+from prometheus_client import Counter, generate_latest, start_http_server
 import datetime
 from elasticsearch import Elasticsearch
 import elastic_transport
@@ -22,6 +22,8 @@ MARIADBHOST = os.getenv("MARIADBHOST")
 MARIADBPORT = os.getenv("MARIADBPORT")
 MARIADBUSER = os.getenv("MARIADBUSER")
 MARIADBPASS = os.getenv("MARIADBPASS")
+
+METRICSPORT = os.getenv("METRICSPORT")
 
 try:
   MariaClient = mariadb.connect(
@@ -60,15 +62,15 @@ base = fb.database()
 
 lista2 = []
 #Información para las métricas
-NumeroDeRequests = Counter('Requests','API Numero de requests')
-NumeroDeErrores = Counter('Errores', 'API Numero de errores en las llamadas')
-NumeroDeDocumentos = Counter('Documentos', 'API Numero de documentos retornados')
+NumeroDeRequests = Counter('flask_requests','API Numero de requests')
+NumeroDeErrores = Counter('flask_errores', 'API Numero de errores en las llamadas')
+NumeroDeDocumentos = Counter('flask_documentos', 'API Numero de documentos retornados')
 #-------------------------------------------------------------
 # Métricas
 #-------------------------------------------------------------
-@api.route('/metrics')
+'''@api.route('/metrics')
 def inicio():
-  return Response(generate_latest(), mimetype="text/plain")
+  return generate_latest()'''
 
 #-------------------------------------------------------------
 # Añadir job a MariaDB
@@ -219,4 +221,5 @@ def listaLikes():
   return "No hay articulos guardados"
 
 if __name__ == '__main__':
-  api.run(debug=True)
+  start_http_server(int(METRICSPORT))
+  api.run(debug=False,port=5000)

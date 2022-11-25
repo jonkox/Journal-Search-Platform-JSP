@@ -10,5 +10,7 @@ spec:
   ports:
     - name: api-port
       port: 5000
+    - name: metrics
+      port: {{ .Values.api.metrics }}
 
 

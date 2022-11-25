@@ -39,6 +39,7 @@ downloader:
 
 api:
   replicas: 1
+  metrics: 6930
 
 
 

@@ -6,7 +6,7 @@ metadata:
     app: api
 spec:
   endpoints:
-  - port: api-port
+  - port: metrics
   selector:
     matchLabels:
       app: api
