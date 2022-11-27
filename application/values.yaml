@@ -25,11 +25,11 @@ loader:
 
 detailsDownloader:
   queuename: "details-downloader"
-  replicas: 10
+  replicas: 3
   metrics: 6947
 
 jatsxml:
-  replicas: 15
+  replicas: 3
   metrics: 6948
   retries: 5
   timeout: 5

@@ -275,8 +275,8 @@ class Downloader:
             start = self.processedGroups_offset * grp_size
             collection = self.get30Docs(start)
             
-            for i in range (0, grp_size):
-                docs.append(collection[i])
+            for i in collection:
+                docs.append(i)
         else:
             iter = 0
             batches = grp_size // 30
@@ -287,8 +287,8 @@ class Downloader:
                 start = (self.processedGroups_offset * grp_size) + (30 * iter)
                 collection = self.get30Docs(start)
 
-                for i in range (0, 30):
-                    docs.append(collection[i])
+                for i in collection:
+                    docs.append(i)
 
                 iter += 1
                 
@@ -296,8 +296,8 @@ class Downloader:
             start = (self.processedGroups_offset * grp_size) + (30 * iter)
             collection = self.get30Docs(start) 
 
-            for i in range (0, extraBatch):
-                docs.append(collection[i])
+            for i in collection:
+                docs.append(i)
 
         doc = {
             "id_job": str(self.id_job),
