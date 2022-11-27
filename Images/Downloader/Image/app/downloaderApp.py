@@ -194,7 +194,7 @@ class Downloader:
        
         update_query = """UPDATE groups set 
                             stage = 'downloader', 
-                            status = 'in-progress',
+                            status = 'In-progress',
                             id = last_insert_id(id)
                             where grp_number = %s AND 
                             id_job = %s"""
@@ -227,7 +227,7 @@ class Downloader:
         self.MariaClient.commit()
 
         stage = 'downloader'
-        status = 'in-progress'
+        status = 'In-progress'
 
         # Get created datetime 
         current_datetime = datetime.datetime.now()
@@ -341,7 +341,7 @@ class Downloader:
         self.mariadbCursor.execute(update_history_query2, (current_datetime_str,history_id,))
         self.MariaClient.commit()
 
-        if status == 'error':
+        if status == 'Error':
             update_history_query3 = """UPDATE history SET message = %s WHERE id = %s"""
             self.mariadbCursor = self.MariaClient.cursor(prepared = True)
             self.mariadbCursor.execute(update_history_query3, (message,history_id,))
@@ -430,12 +430,12 @@ class Downloader:
             self.workForPod(json_object)
             
             # If work was successful then update history table
-            self.updateHistoryTable('completed', "")
+            self.updateHistoryTable('Completed', "")
 
             # Update group status
             update_group_query = """UPDATE groups SET status = %s WHERE id = %s"""
             self.mariadbCursor = self.MariaClient.cursor(prepared = True)
-            self.mariadbCursor.execute(update_group_query, ('completed',self.grp_id,))
+            self.mariadbCursor.execute(update_group_query, ('Completed',self.grp_id,))
             self.MariaClient.commit()
 
             # Send message to output queue for next component
@@ -453,12 +453,12 @@ class Downloader:
             self.errorCount.inc()
 
             # If work was unsuccessful then update history table with error message
-            self.updateHistoryTable('error', str(error))
+            self.updateHistoryTable('Error', str(error))
 
             # Update group status
             update_group_query = """UPDATE groups SET status = %s WHERE grp_number = %s AND id_job = %s"""
             self.mariadbCursor = self.MariaClient.cursor(prepared = True)
-            self.mariadbCursor.execute(update_group_query, ('completed',self.grp_number,self.id_job))
+            self.mariadbCursor.execute(update_group_query, ('Completed',self.grp_number,self.id_job))
             self.MariaClient.commit()
 
             print(f"{bcolors.FAIL} Downloader: {bcolors.RESET} Failed to download group")

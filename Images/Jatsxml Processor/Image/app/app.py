@@ -402,7 +402,7 @@ class JatsxmlProcessor:
         cursor = self.__mariaClient.cursor()
         status = "Completed"
         if (failed):
-            status = "Failed"
+            status = "Error"
         updateHistoryQuery = f'UPDATE history \
                                SET status = \"{status}\", \
                                end = NOW(), \

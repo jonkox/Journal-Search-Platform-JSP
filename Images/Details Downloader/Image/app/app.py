@@ -263,13 +263,13 @@ class DetailsDownloader:
             cursor = self.__mariaClient.cursor()
             #Here we'll update the stage and status of the group in mariadb
             cursor.execute("UPDATE groups SET stage=?, status=?, id=last_insert_id(id) WHERE grp_number=? AND id_job=?", 
-            ("details-downloader","in-progress",grp_number, id_job))
+            ("details-downloader","In-progress",grp_number, id_job))
 
             grp_id = cursor.lastrowid
 
             #Here we'll create a new record in the history table
             cursor.execute("INSERT INTO history (stage, status, created, end, message, grp_id, component) VALUES (?,?,NOW(),NULL,?,?,?)", 
-            ("details-downloader", "in-progress", "", grp_id, PODNAME))
+            ("details-downloader", "In-progress", "", grp_id, PODNAME))
 
             self.__currentHistoryId = cursor.lastrowid
             self.__mariaClient.commit()
