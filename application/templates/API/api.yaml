@@ -17,7 +17,6 @@ spec:
       containers:
       - name: api
         image: pamlez/api
-        imagePullPolicy: Never
         ports:
           - name: api-port
             containerPort: 5000
