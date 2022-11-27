@@ -1,6 +1,7 @@
 from prometheus_client import Counter,Gauge,start_http_server
 from elasticsearch import Elasticsearch
 from xml import parsers
+from time import sleep
 
 import elastic_transport
 import xmltodict
@@ -8,7 +9,6 @@ import requests
 import mariadb
 import json
 import pika
-
 import os
 
 # RabbitMQ
@@ -35,7 +35,8 @@ MARIADBPASS = os.getenv("MARIADBPASS")
 #jatsxml
 PODNAME = os.getenv("HOSTNAME")
 METRICSPORT = os.getenv("METRICSPORT")
-
+RETRIES = os.getenv("RETRIES")
+TIMEOUT = os.getenv("TIMEOUT")
 
 """# RabbitMQ
 RABBITHOST = "localhost" #os.getenv("RABBITHOST")
@@ -426,10 +427,7 @@ class JatsxmlProcessor:
 
     # method in charge of getting the group specify in the queue message
     def getGroupFromElastic(self):
-        try:
-            search = self.__elasticClient.search(
-                index="groups",size=1,
-                query={
+        query = {
                     "bool": { 
                         "must": [ 
                             { "match": { 
@@ -443,7 +441,15 @@ class JatsxmlProcessor:
                         ] 
                     } 
                 }
-            )
+        try:
+            for i in range(0,int(RETRIES)):
+                search = self.__elasticClient.search(index="groups",size=1,query=query)
+                if search["hits"]["total"]["value"] != 0:
+                    break
+                print(f'{bcolors.PROCESSING}Processing:{bcolors.RESET} Group not found retrying...' +
+                    f' -> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+                )
+                sleep(int(TIMEOUT))
             self.__currentGroup = search["hits"]["hits"][0]["_source"]
             self.__currentGroupId = search["hits"]["hits"][0]["_id"]
         except IndexError:
@@ -471,7 +477,16 @@ class JatsxmlProcessor:
             print(f'{bcolors.PROCESSING}Processing:{bcolors.RESET} success at publishing new doc' +
                 f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
             )
-        self.__elasticClient.delete(index="groups", id=self.__currentGroupId)
+        try:
+            self.__elasticClient.delete(index="groups", id=self.__currentGroupId, refresh='wait_for')
+        except:
+            print(f'{bcolors.FAIL}Error:{bcolors.RESET} couldn\'t delete group' +
+                f' -> {bcolors.WARNING} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
+            )
+            self.__historyMessage = "Error in processDocs() function: Group couldn't be deleted"
+            self.__errorCount.inc()
+            return True
+        
         print(f'{bcolors.PROCESSING}Processing:{bcolors.RESET} success at deleting group' +
             f' -> {bcolors.GRAY} grp_number: {self.__currentMessage["grp_number"]} id_job: {self.__currentMessage["id_job"]} {bcolors.RESET}'
         )

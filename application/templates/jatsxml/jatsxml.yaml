@@ -65,4 +65,8 @@ spec:
                 optional: false
           - name: "METRICSPORT"
             value: {{ .Values.jatsxml.metrics | quote }}
+          - name: "RETRIES"
+            value: {{ .Values.jatsxml.retries | quote }}
+          - name: "TIMEOUT"
+            value: {{ .Values.jatsxml.timeout | quote }}
           
